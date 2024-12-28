@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
+import { drag } from 'd3';
 import './App.css';
 
 /**
@@ -27,6 +28,27 @@ export default function GraphEditor() {
   const nextNodeId = useRef(0);
   // Add a ref for unique edge IDs
   const nextEdgeId = useRef(0);
+
+  // Add useEffect for setting up drag behavior
+  useEffect(() => {
+    const dragHandler = drag()
+      .on('drag', (event, nodeData) => {
+        setNodes(prevNodes => 
+          prevNodes.map(node => 
+            node.uniqueId === nodeData.uniqueId
+              ? { ...node, x: event.x, y: event.y }
+              : node
+          )
+        );
+      });
+
+    // Only apply drag behavior when in drag mode
+    if (mode === 'drag') {
+      d3.selectAll('.node').call(dragHandler);
+    } else {
+      d3.selectAll('.node').on('.drag', null); // Remove drag behavior
+    }
+  }, [nodes.length, mode]); // Reapply when nodes change or mode changes
 
   /**
    * Handle clicks on the SVG background for adding nodes (when in 'add_node' mode).
@@ -58,7 +80,10 @@ export default function GraphEditor() {
    * - add_edge: If edgeStart is null, set edgeStart to this node; otherwise prompt for weight, create edge.
    * - delete: Prompt for confirmation, then delete node (and associated edges).
    */
-  const handleNodeClick = (nodeId, uniqueId) => {
+  const handleNodeClick = (nodeId, uniqueId, event) => {
+    // Ignore node clicks during drag events
+    if (event.defaultPrevented) return;
+
     if (mode === 'add_edge') {
       if (edgeStart === null) {
         setEdgeStart(uniqueId);
@@ -265,6 +290,12 @@ export default function GraphEditor() {
     // ...
   };
 
+  // Add new mode setter
+  const setModeDrag = () => {
+    setMode('drag');
+    setEdgeStart(null);
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -326,6 +357,12 @@ export default function GraphEditor() {
           <button className="btn btn-primary" onClick={setModeAddEdge}>Add Edge</button>
           <button className="btn btn-secondary" onClick={setModeDelete}>Delete</button>
           <button className="btn btn-secondary" onClick={setModeRenameEdge}>Change Edge Weight</button>
+          <button 
+            className={`btn ${mode === 'drag' ? 'btn-primary' : 'btn-secondary'}`} 
+            onClick={setModeDrag}
+          >
+            Drag Mode
+          </button>
           <button className="btn btn-secondary" onClick={resetNodeCounter}>Reset Counter</button>
           <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
           <span style={{ marginLeft: '1rem', alignSelf: 'center' }}>
@@ -401,7 +438,13 @@ export default function GraphEditor() {
             className="node"
             onClick={(e) => {
               e.stopPropagation();
-              handleNodeClick(node.id, node.uniqueId);
+              handleNodeClick(node.id, node.uniqueId, e);
+            }}
+            style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
+            ref={(el) => {
+              if (el) {
+                d3.select(el).datum(node);
+              }
             }}
           >
             <circle

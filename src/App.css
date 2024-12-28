@@ -164,3 +164,27 @@ body {
     font-size: 2rem;
   }
 }
+
+.node {
+  cursor: move;
+  user-select: none;  /* Prevent text selection during drag */
+}
+
+.node.dragging {
+  cursor: grabbing !important;
+}
+
+/* Update button styles to show active state */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
