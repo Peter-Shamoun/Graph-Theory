@@ -23,6 +23,15 @@ export default function GraphEditor() {
   const [isWeighted, setIsWeighted] = useState(true);
   const [isDirected, setIsDirected] = useState(false);
   const [directedEdgeMemory, setDirectedEdgeMemory] = useState({});
+  const [bfsAnimationState, setBfsAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    queue: [],
+    currentNode: null,
+    sourceNode: null,
+  });
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -378,6 +387,97 @@ export default function GraphEditor() {
     );
   };
 
+  // Add these new functions to handle BFS
+  const startBFS = (sourceNodeId) => {
+    if (bfsAnimationState.isRunning) return;
+    
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+
+    setBfsAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      queue: [sourceNode.uniqueId],
+      currentNode: sourceNode.uniqueId,
+      sourceNode: sourceNode.uniqueId
+    }));
+
+    runBFSStep();
+  };
+
+  const runBFSStep = async () => {
+    setBfsAnimationState(prev => {
+      if (prev.queue.length === 0 || prev.isPaused) {
+        return prev;
+      }
+
+      const currentNode = prev.queue[0];
+      const newQueue = prev.queue.slice(1);
+      const adjList = getAdjacencyList();
+      const currentNodeId = nodes.find(n => n.uniqueId === currentNode).id;
+      
+      // Get unvisited neighbors
+      const neighbors = adjList[currentNodeId]
+        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
+        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+
+      // Add edges to visited edges
+      const newVisitedEdges = new Set(prev.visitedEdges);
+      neighbors.forEach(neighborId => {
+        const edge = edges.find(e => 
+          (e.source === currentNode && e.target === neighborId) ||
+          (!isDirected && e.target === currentNode && e.source === neighborId)
+        );
+        if (edge) newVisitedEdges.add(edge.id);
+      });
+
+      return {
+        ...prev,
+        queue: [...newQueue, ...neighbors],
+        visitedNodes: new Set([...prev.visitedNodes, ...neighbors]),
+        visitedEdges: newVisitedEdges,
+        currentNode: neighbors.length > 0 ? currentNode : newQueue[0]
+      };
+    });
+
+    // Continue animation after a delay
+    setTimeout(() => {
+      setBfsAnimationState(prev => {
+        if (prev.queue.length > 0 && !prev.isPaused) {
+          runBFSStep();
+        } else if (prev.queue.length === 0) {
+          return { ...prev, isRunning: false };
+        }
+        return prev;
+      });
+    }, 1000); // 1 second delay between steps
+  };
+
+  const togglePauseBFS = () => {
+    setBfsAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.queue.length > 0) {
+        runBFSStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetBFS = () => {
+    setBfsAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      queue: [],
+      currentNode: null,
+      sourceNode: null
+    });
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -447,6 +547,32 @@ export default function GraphEditor() {
           </button>
           <button className="btn btn-secondary" onClick={resetNodeCounter}>Reset Counter</button>
           <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => {
+              if (!bfsAnimationState.isRunning) {
+                setMode('bfs');
+                alert('Click a node to start BFS');
+              }
+            }}
+            disabled={bfsAnimationState.isRunning}
+          >
+            Start BFS
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={togglePauseBFS}
+            disabled={!bfsAnimationState.isRunning}
+          >
+            {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={resetBFS}
+            disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
+          >
+            Reset BFS
+          </button>
           <span style={{ marginLeft: '1rem', alignSelf: 'center' }}>
             Current Mode: <strong>{mode}</strong>
           </span>
@@ -493,8 +619,8 @@ export default function GraphEditor() {
                   y1={sourceNode.y}
                   x2={targetNode.x}
                   y2={targetNode.y}
-                  stroke="black"
-                  strokeWidth="2"
+                  stroke={bfsAnimationState.visitedEdges.has(edge.id) ? "#90EE90" : "black"}
+                  strokeWidth={bfsAnimationState.visitedEdges.has(edge.id) ? "3" : "2"}
                   style={{
                     markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
                   }}
@@ -520,7 +646,11 @@ export default function GraphEditor() {
               className="node"
               onClick={(e) => {
                 e.stopPropagation();
-                handleNodeClick(node.id, node.uniqueId, e);
+                if (!bfsAnimationState.isRunning) {
+                  handleNodeClick(node.id, node.uniqueId, e);
+                } else if (!bfsAnimationState.sourceNode) {
+                  startBFS(node.id);
+                }
               }}
               style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
               ref={(el) => {
@@ -533,7 +663,12 @@ export default function GraphEditor() {
                 cx={node.x}
                 cy={node.y}
                 r={20}
-                fill="lightblue"
+                fill={
+                  bfsAnimationState.currentNode === node.uniqueId ? "#ff8c00" :
+                  bfsAnimationState.visitedNodes.has(node.uniqueId) ? "#90EE90" :
+                  bfsAnimationState.sourceNode === node.uniqueId ? "#FFD700" :
+                  "lightblue"
+                }
                 stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
                 strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
               />
@@ -562,6 +697,19 @@ export default function GraphEditor() {
           </div>
         </div>
       </div>
+
+      {bfsAnimationState.isRunning && (
+        <div className="bfs-queue">
+          <h3>BFS Queue</h3>
+          <div className="queue-visualization">
+            {bfsAnimationState.queue.map((nodeId, index) => (
+              <div key={index} className="queue-item">
+                Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

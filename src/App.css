@@ -235,3 +235,36 @@ body {
   background-color: var(--background);
   font-weight: bold;
 }
+
+.bfs-queue {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.queue-visualization {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.queue-item {
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Animation styles */
+.node circle {
+  transition: fill 0.3s ease;
+}
+
+.edge line {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
