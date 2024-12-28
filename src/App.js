@@ -285,17 +285,37 @@ export default function GraphEditor() {
     return adjacencyList;
   };
 
-  // Example usage for algorithms
-  const runDijkstra = (startNodeId) => {
-    const graph = getAdjacencyList();
-    // Now you can run Dijkstra's algorithm using this format
-    // ...
-  };
+  // // Example usage for algorithms
+  // const runDijkstra = (startNodeId) => {
+  //   const graph = getAdjacencyList();
+  //   // Now you can run Dijkstra's algorithm using this format
+  //   // ...
+  // };
 
   // Add new mode setter
   const setModeDrag = () => {
     setMode('drag');
     setEdgeStart(null);
+  };
+
+  // Add this function to format the adjacency list for display
+  const getFormattedAdjacencyList = () => {
+    const adjList = getAdjacencyList();
+    let formatted = '';
+    
+    Object.keys(adjList).sort((a, b) => a - b).forEach(nodeId => {
+      formatted += `Node ${nodeId}: [\n`;
+      if (adjList[nodeId].length === 0) {
+        formatted += '  No connections\n';
+      } else {
+        adjList[nodeId].forEach(({ node, weight }) => {
+          formatted += `  → Node ${node}${isWeighted ? ` (weight: ${weight})` : ''}\n`;
+        });
+      }
+      formatted += ']\n\n';
+    });
+    
+    return formatted || 'Empty graph';
   };
 
   return (
@@ -373,102 +393,108 @@ export default function GraphEditor() {
         </div>
       </div>
 
-      {/* SVG Canvas */}
-      <svg
-        className="graph-canvas"
-        width="1000"
-        height="1000"
-        onClick={handleSvgClick}
-      >
-        <defs>
-          <marker
-            id="arrowhead"
-            viewBox="0 0 10 10"
-            refX="21"
-            refY="5"
-            markerWidth="8"
-            markerHeight="8"
-            orient="auto-start-reverse"
-          >
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
-          </marker>
-        </defs>
-
-        {edges.map((edge) => {
-          const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
-          const targetNode = nodes.find((n) => n.uniqueId === edge.target);
-          if (!sourceNode || !targetNode) return null;
-
-          const [mx, my] = getMidpoint(
-            sourceNode.x,
-            sourceNode.y,
-            targetNode.x,
-            targetNode.y
-          );
-
-          return (
-            <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
-              <line
-                x1={sourceNode.x}
-                y1={sourceNode.y}
-                x2={targetNode.x}
-                y2={targetNode.y}
-                stroke="black"
-                strokeWidth="2"
-                style={{
-                  markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
-                }}
-              />
-              {isWeighted && (
-                <text
-                  x={mx}
-                  y={my}
-                  dy="-5"
-                  textAnchor="middle"
-                  style={{ fontSize: '12px', fill: 'red' }}
-                >
-                  {edge.weight}
-                </text>
-              )}
-            </g>
-          );
-        })}
-
-        {nodes.map((node) => (
-          <g
-            key={node.uniqueId}
-            className="node"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNodeClick(node.id, node.uniqueId, e);
-            }}
-            style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
-            ref={(el) => {
-              if (el) {
-                d3.select(el).datum(node);
-              }
-            }}
-          >
-            <circle
-              cx={node.x}
-              cy={node.y}
-              r={20}
-              fill="lightblue"
-              stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
-              strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
-            />
-            <text
-              x={node.x}
-              y={node.y}
-              textAnchor="middle"
-              dy=".3em"
-              style={{ fontWeight: 'bold' }}
+      <div className="graph-container">
+        <svg
+          className="graph-canvas"
+          width="1000"
+          height="1000"
+          onClick={handleSvgClick}
+        >
+          <defs>
+            <marker
+              id="arrowhead"
+              viewBox="0 0 10 10"
+              refX="21"
+              refY="5"
+              markerWidth="8"
+              markerHeight="8"
+              orient="auto-start-reverse"
             >
-              {node.id}
-            </text>
-          </g>
-        ))}
-      </svg>
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
+            </marker>
+          </defs>
+
+          {edges.map((edge) => {
+            const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
+            const targetNode = nodes.find((n) => n.uniqueId === edge.target);
+            if (!sourceNode || !targetNode) return null;
+
+            const [mx, my] = getMidpoint(
+              sourceNode.x,
+              sourceNode.y,
+              targetNode.x,
+              targetNode.y
+            );
+
+            return (
+              <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
+                <line
+                  x1={sourceNode.x}
+                  y1={sourceNode.y}
+                  x2={targetNode.x}
+                  y2={targetNode.y}
+                  stroke="black"
+                  strokeWidth="2"
+                  style={{
+                    markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
+                  }}
+                />
+                {isWeighted && (
+                  <text
+                    x={mx}
+                    y={my}
+                    dy="-5"
+                    textAnchor="middle"
+                    style={{ fontSize: '12px', fill: 'red' }}
+                  >
+                    {edge.weight}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {nodes.map((node) => (
+            <g
+              key={node.uniqueId}
+              className="node"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNodeClick(node.id, node.uniqueId, e);
+              }}
+              style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
+              ref={(el) => {
+                if (el) {
+                  d3.select(el).datum(node);
+                }
+              }}
+            >
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r={20}
+                fill="lightblue"
+                stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
+                strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
+              />
+              <text
+                x={node.x}
+                y={node.y}
+                textAnchor="middle"
+                dy=".3em"
+                style={{ fontWeight: 'bold' }}
+              >
+                {node.id}
+              </text>
+            </g>
+          ))}
+        </svg>
+
+        <div className="adjacency-list">
+          <h2>Adjacency List</h2>
+          <pre>{getFormattedAdjacencyList()}</pre>
+        </div>
+      </div>
     </div>
   );
 }
