@@ -318,6 +318,66 @@ export default function GraphEditor() {
     return formatted || 'Empty graph';
   };
 
+  // Add this function to generate the adjacency matrix
+  const getAdjacencyMatrix = () => {
+    // Create a mapping of uniqueId to simple numeric id
+    const idMapping = {};
+    nodes.forEach(node => {
+      idMapping[node.uniqueId] = node.id;
+    });
+
+    // Initialize matrix with zeros
+    const size = nodes.length;
+    const matrix = Array(size).fill().map(() => Array(size).fill(0));
+
+    // Fill matrix based on edges
+    edges.forEach(edge => {
+      const sourceIdx = idMapping[edge.source];
+      const targetIdx = idMapping[edge.target];
+      
+      matrix[sourceIdx][targetIdx] = 1;
+      
+      // For undirected graphs, make it symmetrical
+      if (!isDirected) {
+        matrix[targetIdx][sourceIdx] = 1;
+      }
+    });
+
+    return matrix;
+  };
+
+  // Add this function to render the matrix
+  const renderAdjacencyMatrix = () => {
+    const matrix = getAdjacencyMatrix();
+    
+    if (nodes.length === 0) {
+      return <p>Empty graph</p>;
+    }
+
+    return (
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            {nodes.sort((a, b) => a.id - b.id).map(node => (
+              <th key={node.id}>{node.id}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {matrix.map((row, i) => (
+            <tr key={i}>
+              <th>{i}</th>
+              {row.map((cell, j) => (
+                <td key={j}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -394,6 +454,11 @@ export default function GraphEditor() {
       </div>
 
       <div className="graph-container">
+        <div className="matrix-list">
+          <h2>Adjacency Matrix</h2>
+          {renderAdjacencyMatrix()}
+        </div>
+
         <svg
           className="graph-canvas"
           width="1000"

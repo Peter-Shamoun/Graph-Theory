@@ -196,11 +196,10 @@ body {
 }
 
 .graph-canvas {
-  flex: 1;
-  /* ... existing graph-canvas styles ... */
+  flex: 2;  /* Give more space to the graph */
 }
 
-.adjacency-list {
+.matrix-list, .adjacency-list {
   width: 300px;
   background: var(--surface);
   padding: 1rem;
@@ -208,16 +207,21 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.adjacency-list h2 {
-  color: var(--primary);
-  margin-bottom: 1rem;
+.matrix-list table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: monospace;
+  margin-top: 1rem;
 }
 
-.adjacency-list pre {
-  background: var(--background);
-  padding: 1rem;
-  border-radius: 0.25rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  font-family: monospace;
+.matrix-list td, .matrix-list th {
+  border: 1px solid var(--secondary);
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.matrix-list th {
+  background-color: var(--background);
+  font-weight: bold;
 }
