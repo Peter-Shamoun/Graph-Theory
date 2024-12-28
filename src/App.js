@@ -19,6 +19,8 @@ export default function GraphEditor() {
   const [edgeStart, setEdgeStart] = useState(null);
   const [highlightedNodes, setHighlightedNodes] = useState([]);
   const [isWeighted, setIsWeighted] = useState(true);
+  const [isDirected, setIsDirected] = useState(false);
+  const [directedEdgeMemory, setDirectedEdgeMemory] = useState({});
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -64,29 +66,45 @@ export default function GraphEditor() {
         if (edgeStart !== uniqueId) {
           setHighlightedNodes([edgeStart, uniqueId]);
           
-          // Handle edge creation based on graph type
-          if (isWeighted) {
-            const weight = prompt('Enter edge weight (numeric value):', '1');
-            if (weight !== null) {
+          // Check for existing edges between these nodes
+          const existingEdge = edges.find(e => 
+            (e.source === edgeStart && e.target === uniqueId) ||
+            (!isDirected && e.source === uniqueId && e.target === edgeStart)
+          );
+
+          if (!existingEdge) {
+            if (isWeighted) {
+              const weight = prompt('Enter edge weight (numeric value):', '1');
+              if (weight !== null) {
+                const newEdge = {
+                  id: nextEdgeId.current,
+                  source: edgeStart,
+                  target: uniqueId,
+                  weight: parseFloat(weight),
+                };
+                nextEdgeId.current += 1;
+                setEdges((prevEdges) => [...prevEdges, newEdge]);
+                // Remember the original direction
+                setDirectedEdgeMemory(prev => ({
+                  ...prev,
+                  [newEdge.id]: { source: edgeStart, target: uniqueId }
+                }));
+              }
+            } else {
               const newEdge = {
                 id: nextEdgeId.current,
                 source: edgeStart,
                 target: uniqueId,
-                weight: parseFloat(weight),
+                weight: 1,
               };
               nextEdgeId.current += 1;
               setEdges((prevEdges) => [...prevEdges, newEdge]);
+              // Remember the original direction
+              setDirectedEdgeMemory(prev => ({
+                ...prev,
+                [newEdge.id]: { source: edgeStart, target: uniqueId }
+              }));
             }
-          } else {
-            // For unweighted graphs, automatically add edge with weight 1
-            const newEdge = {
-              id: nextEdgeId.current,
-              source: edgeStart,
-              target: uniqueId,
-              weight: 1,
-            };
-            nextEdgeId.current += 1;
-            setEdges((prevEdges) => [...prevEdges, newEdge]);
           }
         }
         setHighlightedNodes([]);
@@ -163,11 +181,51 @@ export default function GraphEditor() {
     nextEdgeId.current = 0;
   };
 
+  // Add function to handle directed/undirected toggle
+  const handleDirectedToggle = (directed) => {
+    setIsDirected(directed);
+    
+    if (directed) {
+      // Switching to directed: restore original directions
+      setEdges(prevEdges => {
+        const newEdges = prevEdges.map(edge => ({
+          ...edge,
+          source: directedEdgeMemory[edge.id]?.source || edge.source,
+          target: directedEdgeMemory[edge.id]?.target || edge.target,
+        }));
+        
+        // Remove duplicate undirected edges
+        return newEdges.filter((edge, index, self) => 
+          index === self.findIndex(e => 
+            (e.source === edge.source && e.target === edge.target) ||
+            (e.source === edge.target && e.target === edge.source)
+          )
+        );
+      });
+    } else {
+      // Switching to undirected: normalize edges to prevent duplicates
+      setEdges(prevEdges => {
+        const normalizedEdges = [];
+        const edgePairs = new Set();
+
+        prevEdges.forEach(edge => {
+          const pair = [edge.source, edge.target].sort().join('-');
+          if (!edgePairs.has(pair)) {
+            edgePairs.add(pair);
+            normalizedEdges.push(edge);
+          }
+        });
+
+        return normalizedEdges;
+      });
+    }
+  };
+
   return (
     <div style={{ margin: '1rem' }}>
       <h2>Graph Editor</h2>
 
-      {/* Graph Type Selection */}
+      {/* Graph Type Selection with disabled state */}
       <div style={{ marginBottom: '1rem' }}>
         <label style={{ marginRight: '1rem' }}>
           <input
@@ -177,13 +235,38 @@ export default function GraphEditor() {
             onChange={() => setIsWeighted(true)}
           /> Weighted
         </label>
-        <label>
+        <label style={{ marginRight: '1rem' }}>
           <input
             type="radio"
             value="unweighted"
             checked={!isWeighted}
             onChange={() => setIsWeighted(false)}
           /> Unweighted
+        </label>
+        <label style={{ 
+          marginRight: '1rem', 
+          opacity: nodes.length > 0 ? 0.5 : 1,
+          cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+        }}>
+          <input
+            type="radio"
+            value="directed"
+            checked={isDirected}
+            onChange={() => handleDirectedToggle(true)}
+            disabled={nodes.length > 0}
+          /> Directed
+        </label>
+        <label style={{ 
+          opacity: nodes.length > 0 ? 0.5 : 1,
+          cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+        }}>
+          <input
+            type="radio"
+            value="undirected"
+            checked={!isDirected}
+            onChange={() => handleDirectedToggle(false)}
+            disabled={nodes.length > 0}
+          /> Undirected
         </label>
       </div>
 
@@ -207,7 +290,20 @@ export default function GraphEditor() {
         style={{ border: '1px solid #ccc', background: '#fff' }}
         onClick={handleSvgClick}
       >
-        {/* Render edges (lines + weight labels) */}
+        <defs>
+          <marker
+            id="arrowhead"
+            viewBox="0 0 10 10"
+            refX="21"
+            refY="5"
+            markerWidth="8"
+            markerHeight="8"
+            orient="auto-start-reverse"
+          >
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
+          </marker>
+        </defs>
+
         {edges.map((edge) => {
           const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
           const targetNode = nodes.find((n) => n.uniqueId === edge.target);
@@ -229,8 +325,10 @@ export default function GraphEditor() {
                 y2={targetNode.y}
                 stroke="black"
                 strokeWidth="2"
+                style={{
+                  markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
+                }}
               />
-              {/* Only show weight labels for weighted graphs */}
               {isWeighted && (
                 <text
                   x={mx}
