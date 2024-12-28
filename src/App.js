@@ -550,10 +550,8 @@ export default function GraphEditor() {
           <button 
             className="btn btn-primary"
             onClick={() => {
-              if (!bfsAnimationState.isRunning) {
-                setMode('bfs');
-                alert('Click a node to start BFS');
-              }
+              setMode('bfs');
+              alert('Click a node to start BFS');
             }}
             disabled={bfsAnimationState.isRunning}
           >
@@ -646,10 +644,10 @@ export default function GraphEditor() {
               className="node"
               onClick={(e) => {
                 e.stopPropagation();
-                if (!bfsAnimationState.isRunning) {
-                  handleNodeClick(node.id, node.uniqueId, e);
-                } else if (!bfsAnimationState.sourceNode) {
+                if (mode === 'bfs') {
                   startBFS(node.id);
+                } else if (!bfsAnimationState.isRunning) {
+                  handleNodeClick(node.id, node.uniqueId, e);
                 }
               }}
               style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
