@@ -22,6 +22,8 @@ export default function GraphEditor() {
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
+  // Add a ref for unique edge IDs
+  const nextEdgeId = useRef(0);
 
   /**
    * Handle clicks on the SVG background for adding nodes (when in 'add_node' mode).
@@ -37,10 +39,14 @@ export default function GraphEditor() {
     const [x, y] = point;
 
     // Create a new node
-    const newId = nextNodeId.current;
+    const newNode = {
+      id: nextNodeId.current,
+      uniqueId: `node-${Date.now()}-${Math.random()}`, // Add unique identifier
+      x,
+      y
+    };
+    
     nextNodeId.current += 1;
-
-    const newNode = { id: newId, x, y };
     setNodes((prev) => [...prev, newNode]);
   };
 
@@ -49,35 +55,37 @@ export default function GraphEditor() {
    * - add_edge: If edgeStart is null, set edgeStart to this node; otherwise prompt for weight, create edge.
    * - delete: Prompt for confirmation, then delete node (and associated edges).
    */
-  const handleNodeClick = (nodeId) => {
+  const handleNodeClick = (nodeId, uniqueId) => {
     if (mode === 'add_edge') {
       if (edgeStart === null) {
-        setEdgeStart(nodeId);
-        setHighlightedNodes([nodeId]);
+        setEdgeStart(uniqueId);
+        setHighlightedNodes([uniqueId]);
       } else {
-        if (edgeStart !== nodeId) {
-          setHighlightedNodes([edgeStart, nodeId]);
+        if (edgeStart !== uniqueId) {
+          setHighlightedNodes([edgeStart, uniqueId]);
           
           // Handle edge creation based on graph type
           if (isWeighted) {
             const weight = prompt('Enter edge weight (numeric value):', '1');
             if (weight !== null) {
               const newEdge = {
-                id: `${edgeStart}-${nodeId}`,
+                id: nextEdgeId.current,
                 source: edgeStart,
-                target: nodeId,
+                target: uniqueId,
                 weight: parseFloat(weight),
               };
+              nextEdgeId.current += 1;
               setEdges((prevEdges) => [...prevEdges, newEdge]);
             }
           } else {
             // For unweighted graphs, automatically add edge with weight 1
             const newEdge = {
-              id: `${edgeStart}-${nodeId}`,
+              id: nextEdgeId.current,
               source: edgeStart,
-              target: nodeId,
+              target: uniqueId,
               weight: 1,
             };
+            nextEdgeId.current += 1;
             setEdges((prevEdges) => [...prevEdges, newEdge]);
           }
         }
@@ -86,11 +94,11 @@ export default function GraphEditor() {
       }
     } else if (mode === 'delete') {
       // Remove confirmation and directly delete the node
-      setNodes((prevNodes) => prevNodes.filter((n) => n.id !== nodeId));
+      setNodes((prevNodes) => prevNodes.filter((n) => n.uniqueId !== uniqueId));
       // Remove edges that are connected to this node
       setEdges((prevEdges) =>
         prevEdges.filter(
-          (e) => e.source !== nodeId && e.target !== nodeId
+          (e) => e.source !== uniqueId && e.target !== uniqueId
         )
       );
     }
@@ -152,6 +160,7 @@ export default function GraphEditor() {
     setNodes([]);
     setEdges([]);
     nextNodeId.current = 0;
+    nextEdgeId.current = 0;
   };
 
   return (
@@ -200,8 +209,8 @@ export default function GraphEditor() {
       >
         {/* Render edges (lines + weight labels) */}
         {edges.map((edge) => {
-          const sourceNode = nodes.find((n) => n.id === edge.source);
-          const targetNode = nodes.find((n) => n.id === edge.target);
+          const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
+          const targetNode = nodes.find((n) => n.uniqueId === edge.target);
           if (!sourceNode || !targetNode) return null;
 
           const [mx, my] = getMidpoint(
@@ -240,10 +249,10 @@ export default function GraphEditor() {
         {/* Render nodes (circles + labels) */}
         {nodes.map((node) => (
           <g
-            key={node.id}
+            key={node.uniqueId}
             onClick={(e) => {
               e.stopPropagation();
-              handleNodeClick(node.id);
+              handleNodeClick(node.id, node.uniqueId);
             }}
           >
             <circle
@@ -251,8 +260,8 @@ export default function GraphEditor() {
               cy={node.y}
               r={20}
               fill="lightblue"
-              stroke={highlightedNodes.includes(node.id) ? "green" : "darkblue"}
-              strokeWidth={highlightedNodes.includes(node.id) ? "4" : "2"}
+              stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
+              strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
             />
             <text
               x={node.x}
