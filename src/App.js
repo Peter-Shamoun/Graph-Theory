@@ -191,6 +191,8 @@ export default function GraphEditor() {
           )
         );
       }
+    } else if (mode === 'delete') {
+      setEdges(prevEdges => prevEdges.filter(e => e.id !== edge.id));
     }
   };
 
