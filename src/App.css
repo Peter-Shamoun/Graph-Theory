@@ -191,16 +191,26 @@ body {
 
 .graph-container {
   display: flex;
+  flex-direction: column;
   gap: 2rem;
   margin-top: 1rem;
 }
 
 .graph-canvas {
-  flex: 2;  /* Give more space to the graph */
+  width: 100%;
+  background: var(--surface);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.matrix-list-container {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
 }
 
 .matrix-list, .adjacency-list {
-  width: 300px;
+  flex: 1;
   background: var(--surface);
   padding: 1rem;
   border-radius: 0.5rem;

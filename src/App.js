@@ -454,15 +454,10 @@ export default function GraphEditor() {
       </div>
 
       <div className="graph-container">
-        <div className="matrix-list">
-          <h2>Adjacency Matrix</h2>
-          {renderAdjacencyMatrix()}
-        </div>
-
         <svg
           className="graph-canvas"
           width="1000"
-          height="1000"
+          height="600"
           onClick={handleSvgClick}
         >
           <defs>
@@ -555,9 +550,16 @@ export default function GraphEditor() {
           ))}
         </svg>
 
-        <div className="adjacency-list">
-          <h2>Adjacency List</h2>
-          <pre>{getFormattedAdjacencyList()}</pre>
+        <div className="matrix-list-container">
+          <div className="matrix-list">
+            <h2>Adjacency Matrix</h2>
+            {renderAdjacencyMatrix()}
+          </div>
+
+          <div className="adjacency-list">
+            <h2>Adjacency List</h2>
+            <pre>{getFormattedAdjacencyList()}</pre>
+          </div>
         </div>
       </div>
     </div>
