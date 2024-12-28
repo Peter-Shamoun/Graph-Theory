@@ -222,6 +222,49 @@ export default function GraphEditor() {
     }
   };
 
+  // Add these helper functions to GraphEditor component
+  const getAdjacencyList = () => {
+    // Create a mapping of uniqueId to simple numeric id
+    const idMapping = {};
+    nodes.forEach(node => {
+      idMapping[node.uniqueId] = node.id;
+    });
+
+    // Create adjacency list
+    const adjacencyList = {};
+    nodes.forEach(node => {
+      adjacencyList[node.id] = [];
+    });
+
+    edges.forEach(edge => {
+      const sourceId = idMapping[edge.source];
+      const targetId = idMapping[edge.target];
+      
+      // Add edge with weight
+      adjacencyList[sourceId].push({
+        node: targetId,
+        weight: edge.weight
+      });
+
+      // If undirected, add reverse edge
+      if (!isDirected) {
+        adjacencyList[targetId].push({
+          node: sourceId,
+          weight: edge.weight
+        });
+      }
+    });
+
+    return adjacencyList;
+  };
+
+  // Example usage for algorithms
+  const runDijkstra = (startNodeId) => {
+    const graph = getAdjacencyList();
+    // Now you can run Dijkstra's algorithm using this format
+    // ...
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
