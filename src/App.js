@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as d3 from 'd3';
+import './App.css';
 
 /**
  * GraphEditor component replicates the functionality of the original Python/Tkinter Graph Editor:
@@ -222,72 +223,79 @@ export default function GraphEditor() {
   };
 
   return (
-    <div style={{ margin: '1rem' }}>
-      <h2>Graph Editor</h2>
+    <div className="graph-editor">
+      <header className="graph-editor__header">
+        <h1 className="graph-editor__title">Graph Editor</h1>
+      </header>
 
-      {/* Graph Type Selection with disabled state */}
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={{ marginRight: '1rem' }}>
-          <input
-            type="radio"
-            value="weighted"
-            checked={isWeighted}
-            onChange={() => setIsWeighted(true)}
-          /> Weighted
-        </label>
-        <label style={{ marginRight: '1rem' }}>
-          <input
-            type="radio"
-            value="unweighted"
-            checked={!isWeighted}
-            onChange={() => setIsWeighted(false)}
-          /> Unweighted
-        </label>
-        <label style={{ 
-          marginRight: '1rem', 
-          opacity: nodes.length > 0 ? 0.5 : 1,
-          cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
-        }}>
-          <input
-            type="radio"
-            value="directed"
-            checked={isDirected}
-            onChange={() => handleDirectedToggle(true)}
-            disabled={nodes.length > 0}
-          /> Directed
-        </label>
-        <label style={{ 
-          opacity: nodes.length > 0 ? 0.5 : 1,
-          cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
-        }}>
-          <input
-            type="radio"
-            value="undirected"
-            checked={!isDirected}
-            onChange={() => handleDirectedToggle(false)}
-            disabled={nodes.length > 0}
-          /> Undirected
-        </label>
-      </div>
+      <div className="graph-editor__controls">
+        {/* Graph Type Selection */}
+        <div className="radio-group">
+          <label className="radio-label">
+            <input
+              type="radio"
+              value="weighted"
+              checked={isWeighted}
+              onChange={() => setIsWeighted(true)}
+            /> 
+            Weighted
+          </label>
+          <label className="radio-label">
+            <input
+              type="radio"
+              value="unweighted"
+              checked={!isWeighted}
+              onChange={() => setIsWeighted(false)}
+            /> 
+            Unweighted
+          </label>
+          <label className="radio-label" style={{ 
+            opacity: nodes.length > 0 ? 0.5 : 1,
+            cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+          }}>
+            <input
+              type="radio"
+              value="directed"
+              checked={isDirected}
+              onChange={() => handleDirectedToggle(true)}
+              disabled={nodes.length > 0}
+            /> 
+            Directed
+          </label>
+          <label className="radio-label" style={{ 
+            opacity: nodes.length > 0 ? 0.5 : 1,
+            cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+          }}>
+            <input
+              type="radio"
+              value="undirected"
+              checked={!isDirected}
+              onChange={() => handleDirectedToggle(false)}
+              disabled={nodes.length > 0}
+            /> 
+            Undirected
+          </label>
+        </div>
 
-      {/* Toolbar */}
-      <div style={{ marginBottom: '1rem' }}>
-        <button onClick={setModeAddNode}>Add Node</button>
-        <button onClick={setModeAddEdge}>Add Edge</button>
-        <button onClick={setModeDelete}>Delete</button>
-        <button onClick={setModeRenameEdge}>Change Edge Weight</button>
-        <button onClick={resetNodeCounter}>Reset Counter</button>
-        <button onClick={deleteAll}>Delete All</button>
-        <span style={{ marginLeft: '1rem' }}>
-          Current Mode: <strong>{mode}</strong>
-        </span>
+        {/* Toolbar */}
+        <div className="button-group">
+          <button className="btn btn-primary" onClick={setModeAddNode}>Add Node</button>
+          <button className="btn btn-primary" onClick={setModeAddEdge}>Add Edge</button>
+          <button className="btn btn-secondary" onClick={setModeDelete}>Delete</button>
+          <button className="btn btn-secondary" onClick={setModeRenameEdge}>Change Edge Weight</button>
+          <button className="btn btn-secondary" onClick={resetNodeCounter}>Reset Counter</button>
+          <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
+          <span style={{ marginLeft: '1rem', alignSelf: 'center' }}>
+            Current Mode: <strong>{mode}</strong>
+          </span>
+        </div>
       </div>
 
       {/* SVG Canvas */}
       <svg
+        className="graph-canvas"
         width="1000"
         height="1000"
-        style={{ border: '1px solid #ccc', background: '#fff' }}
         onClick={handleSvgClick}
       >
         <defs>
@@ -317,7 +325,7 @@ export default function GraphEditor() {
           );
 
           return (
-            <g key={edge.id} onClick={(e) => handleEdgeClick(edge, e)}>
+            <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
               <line
                 x1={sourceNode.x}
                 y1={sourceNode.y}
@@ -344,10 +352,10 @@ export default function GraphEditor() {
           );
         })}
 
-        {/* Render nodes (circles + labels) */}
         {nodes.map((node) => (
           <g
             key={node.uniqueId}
+            className="node"
             onClick={(e) => {
               e.stopPropagation();
               handleNodeClick(node.id, node.uniqueId);
