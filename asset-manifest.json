@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/Graph-Theory/static/css/main.06652393.css",
-    "main.js": "/Graph-Theory/static/js/main.5d71000b.js",
+    "main.css": "/Graph-Theory/static/css/main.d2acee8b.css",
+    "main.js": "/Graph-Theory/static/js/main.39251597.js",
     "index.html": "/Graph-Theory/index.html",
-    "main.06652393.css.map": "/Graph-Theory/static/css/main.06652393.css.map",
-    "main.5d71000b.js.map": "/Graph-Theory/static/js/main.5d71000b.js.map"
+    "main.d2acee8b.css.map": "/Graph-Theory/static/css/main.d2acee8b.css.map",
+    "main.39251597.js.map": "/Graph-Theory/static/js/main.39251597.js.map"
   },
   "entrypoints": [
-    "static/css/main.06652393.css",
-    "static/js/main.5d71000b.js"
+    "static/css/main.d2acee8b.css",
+    "static/js/main.39251597.js"
   ]
 }
