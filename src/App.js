@@ -32,6 +32,7 @@ export default function GraphEditor() {
     currentNode: null,
     sourceNode: null,
   });
+  const [animationSpeed, setAnimationSpeed] = useState(1000); // Default 1000ms (1 second)
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -408,6 +409,12 @@ export default function GraphEditor() {
     runBFSStep();
   };
 
+  const getAnimationDelay = () => {
+    // Convert slider value (1-100) to delay (1500ms - 100ms)
+    // Reversed so that higher slider value = faster animation
+    return 1600 - (animationSpeed * 15);
+  };
+
   const runBFSStep = async () => {
     setBfsAnimationState(prev => {
       if (prev.queue.length === 0 || prev.isPaused) {
@@ -443,7 +450,7 @@ export default function GraphEditor() {
       };
     });
 
-    // Continue animation after a delay
+    // Use the dynamic animation delay
     setTimeout(() => {
       setBfsAnimationState(prev => {
         if (prev.queue.length > 0 && !prev.isPaused) {
@@ -453,7 +460,7 @@ export default function GraphEditor() {
         }
         return prev;
       });
-    }, 1000); // 1 second delay between steps
+    }, getAnimationDelay());
   };
 
   const togglePauseBFS = () => {
@@ -708,6 +715,22 @@ export default function GraphEditor() {
           </div>
         </div>
       )}
+
+      <div className="animation-controls">
+        <div className="speed-slider">
+          <label htmlFor="speed-control">Animation Speed:</label>
+          <input
+            id="speed-control"
+            type="range"
+            min="1"
+            max="100"
+            value={animationSpeed}
+            onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
+            disabled={bfsAnimationState.isRunning && !bfsAnimationState.isPaused}
+          />
+          <span>{animationSpeed}%</span>
+        </div>
+      </div>
     </div>
   );
 }

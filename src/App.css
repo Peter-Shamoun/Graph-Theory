@@ -268,3 +268,56 @@ body {
 .edge line {
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
+
+.animation-controls {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.speed-slider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.speed-slider input[type="range"] {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--background);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.speed-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.speed-slider input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--primary-dark);
+}
+
+.speed-slider input[type="range"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speed-slider label {
+  min-width: 120px;
+  font-weight: 500;
+}
+
+.speed-slider span {
+  min-width: 48px;
+  text-align: right;
+}
