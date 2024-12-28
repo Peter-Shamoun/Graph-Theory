@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Graph-Theory/static/css/main.addbf820.css",
+    "main.js": "/Graph-Theory/static/js/main.99bb6f6d.js",
+    "index.html": "/Graph-Theory/index.html",
+    "main.addbf820.css.map": "/Graph-Theory/static/css/main.addbf820.css.map",
+    "main.99bb6f6d.js.map": "/Graph-Theory/static/js/main.99bb6f6d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.addbf820.css",
+    "static/js/main.99bb6f6d.js"
+  ]
+}
