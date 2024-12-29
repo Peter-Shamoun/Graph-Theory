@@ -235,6 +235,7 @@ body {
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: monospace;
 }
 
 .matrix-list table {
@@ -448,4 +449,10 @@ body {
 
 .algorithm-controls .btn {
   width: 100%;
+}
+
+/* If you need to specifically target the "Empty graph" text */
+.matrix-list h2, .adjacency-list h2,
+.matrix-list p, .adjacency-list p {
+  font-family: monospace;
 }
