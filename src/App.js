@@ -451,7 +451,7 @@ export default function GraphEditor() {
   const getAnimationDelay = () => {
     // Convert slider value (1-100) to delay (1500ms - 100ms)
     // Reversed so that higher slider value = faster animation
-    return 3200 - (animationSpeed * 15);
+    return 2400 - (animationSpeed * 15);
   };
 
   const runBFSStep = async () => {

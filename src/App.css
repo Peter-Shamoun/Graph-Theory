@@ -412,21 +412,21 @@ body {
 
 .main-content {
   display: flex;
+  flex-direction: column;
   gap: 2rem;
   margin: 2rem 1rem;
 }
 
 .graph-container {
-  flex: 1;
+  width: 100%;
 }
 
 .algorithm-container {
-  width: 300px;
+  width: 100%;
   background: var(--surface);
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  align-self: flex-start;
 }
 
 .algorithm-container h2 {
@@ -509,6 +509,7 @@ body {
 .current-node,
 .queue-section,
 .dictionary-section {
+  width: 100%;
   background: var(--background);
   padding: 1rem;
   border-radius: 0.5rem;
@@ -555,6 +556,7 @@ body {
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 .dfs-status {
@@ -572,10 +574,11 @@ body {
 
 .stack-visualization {
   display: flex;
-  flex-direction: column-reverse; /* Stack grows upward */
+  flex-direction: row;
   gap: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem;
+  overflow-x: auto;
 }
 
 .stack-item {
@@ -585,4 +588,28 @@ body {
   border-radius: 0.25rem;
   font-size: 0.9rem;
   text-align: center;
+  min-width: fit-content;
+}
+
+/* Ensure consistent section widths */
+.current-node,
+.stack-section,
+.dictionary-section {
+  width: 100%;
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Add responsive adjustments */
+@media (max-width: 1200px) {
+  .dfs-status {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dfs-status {
+    grid-template-columns: 1fr;
+  }
 }
