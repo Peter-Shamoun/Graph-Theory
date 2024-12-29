@@ -1196,7 +1196,7 @@ export default function GraphEditor() {
 
           {(timedDfsAnimationState.isRunning || timedDfsAnimationState.visitedNodes.size > 0) && (
             <div className="timed-dfs-status-container">
-              <h3>Timed Topological Sort (DFS) Status</h3>
+              <h3>Topological Sort (DFS) Status</h3>
               <div className="dfs-status">
                 <div className="current-node">
                   <strong>Current Node:</strong> {
@@ -1350,7 +1350,7 @@ export default function GraphEditor() {
                 onClick={togglePauseTimedDFS}
                 disabled={!timedDfsAnimationState.isRunning}
               >
-                {timedDfsAnimationState.isPaused ? 'Resume' : 'Pause'} Timed DFS
+                {timedDfsAnimationState.isPaused ? 'Resume' : 'Pause'} Topological Sort (DFS)
               </button>
               <button
                 className="btn btn-secondary"
