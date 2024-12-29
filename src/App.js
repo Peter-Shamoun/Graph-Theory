@@ -722,6 +722,43 @@ export default function GraphEditor() {
         </div>
       </div>
 
+      {/* New Algorithm Control Panel */}
+      <div className="algorithm-panel">
+        <h2>Algorithms</h2>
+        
+        <div className="algorithm-section">
+          <h3>Breadth-First Search</h3>
+          <div className="algorithm-controls">
+            <button 
+              className="btn btn-primary"
+              onClick={() => {
+                setMode('bfs');
+                alert('Click a node to start BFS');
+              }}
+              disabled={bfsAnimationState.isRunning}
+            >
+              Start BFS
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={togglePauseBFS}
+              disabled={!bfsAnimationState.isRunning}
+            >
+              {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={resetBFS}
+              disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
+            >
+              Reset BFS
+            </button>
+          </div>
+        </div>
+        
+        {/* Future algorithm sections will go here */}
+      </div>
+
       {bfsAnimationState.isRunning && (
         <div className="bfs-queue">
           <h3>BFS Queue</h3>
@@ -734,22 +771,6 @@ export default function GraphEditor() {
           </div>
         </div>
       )}
-
-      <div className="animation-controls">
-        <div className="speed-slider">
-          <label htmlFor="speed-control">Animation Speed:</label>
-          <input
-            id="speed-control"
-            type="range"
-            min="1"
-            max="100"
-            value={animationSpeed}
-            onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
-            disabled={bfsAnimationState.isRunning && !bfsAnimationState.isPaused}
-          />
-          <span>{animationSpeed}%</span>
-        </div>
-      </div>
     </div>
   );
 }
