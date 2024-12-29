@@ -708,43 +708,9 @@ export default function GraphEditor() {
               <pre>{getFormattedAdjacencyList()}</pre>
             </div>
           </div>
-        </div>
-
-        <div className="algorithm-container">
-          <h2>Algorithms</h2>
-          
-          <div className="algorithm-section">
-            <h3>Breadth-First Search</h3>
-            <div className="algorithm-controls">
-              <button 
-                className="btn btn-primary"
-                onClick={() => {
-                  setMode('bfs');
-                  alert('Click a node to start BFS');
-                }}
-                disabled={bfsAnimationState.isRunning}
-              >
-                Start BFS
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={togglePauseBFS}
-                disabled={!bfsAnimationState.isRunning}
-              >
-                {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
-              </button>
-              <button
-                className="btn btn-secondary"
-                onClick={resetBFS}
-                disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
-              >
-                Reset BFS
-              </button>
-            </div>
-          </div>
 
           {bfsAnimationState.isRunning && (
-            <div className="bfs-queue">
+            <div className="bfs-status-container">
               <h3>BFS Status</h3>
               <div className="bfs-status">
                 <div className="current-node">
@@ -791,6 +757,40 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="algorithm-container">
+          <h2>Algorithms</h2>
+          
+          <div className="algorithm-section">
+            <h3>Breadth-First Search</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setMode('bfs');
+                  alert('Click a node to start BFS');
+                }}
+                disabled={bfsAnimationState.isRunning}
+              >
+                Start BFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseBFS}
+                disabled={!bfsAnimationState.isRunning}
+              >
+                {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetBFS}
+                disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
+              >
+                Reset BFS
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
