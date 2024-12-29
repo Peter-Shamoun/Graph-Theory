@@ -397,6 +397,17 @@ export default function GraphEditor() {
     const sourceNode = nodes.find(n => n.id === sourceNodeId);
     if (!sourceNode) return;
 
+    // Initialize distances and predecessors for all nodes
+    const initialDistances = {};
+    const initialPredecessors = {};
+    nodes.forEach(node => {
+      initialDistances[node.uniqueId] = Infinity;
+      initialPredecessors[node.uniqueId] = null;
+    });
+
+    // Set source node distance to 0
+    initialDistances[sourceNode.uniqueId] = 0;
+
     setBfsAnimationState(prev => ({
       ...prev,
       isRunning: true,
@@ -406,8 +417,8 @@ export default function GraphEditor() {
       queue: [sourceNode.uniqueId],
       currentNode: sourceNode.uniqueId,
       sourceNode: sourceNode.uniqueId,
-      predecessors: { [sourceNode.uniqueId]: null },
-      distances: { [sourceNode.uniqueId]: 0 },
+      predecessors: initialPredecessors,
+      distances: initialDistances,
     }));
 
     runBFSStep();
@@ -749,7 +760,7 @@ export default function GraphEditor() {
                   <div className="dictionary-visualization">
                     {Object.entries(bfsAnimationState.distances).map(([nodeId, distance]) => (
                       <div key={nodeId} className="dictionary-item">
-                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance}
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance === Infinity ? '∞' : distance}
                       </div>
                     ))}
                   </div>
