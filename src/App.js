@@ -219,6 +219,19 @@ export default function GraphEditor() {
     setEdges([]);
     nextNodeId.current = 0;
     nextEdgeId.current = 0;
+    
+    // Reset BFS state
+    setBfsAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      queue: [],
+      currentNode: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+    });
   };
 
   // Add function to handle directed/undirected toggle
