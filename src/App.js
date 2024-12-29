@@ -1670,11 +1670,8 @@ export default function GraphEditor() {
             <div className="algorithm-controls">
               <button 
                 className="btn btn-primary"
-                onClick={() => {
-                  setMode('bellmanFord');
-                  alert('Click a node to start Bellman Ford');
-                }}
-                disabled={bellmanFordAnimationState.isRunning}
+                onClick={startBellmanFord}
+                disabled={bellmanFordAnimationState.isRunning || nodes.length === 0}
               >
                 Start Bellman Ford
               </button>
