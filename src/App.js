@@ -1092,7 +1092,20 @@ export default function GraphEditor() {
         </div>
         
         <div className="edge-sequence-section">
-          <strong>Edge Sequence:</strong>
+          <strong>Current Edge Order:</strong>
+          <div className="edge-sequence-visualization">
+            {edges.map((edge, index) => (
+              <div key={index} className="edge-item">
+                (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
+                 v{nodes.find(n => n.uniqueId === edge.target)?.id})
+                {index < edges.length - 1 && ', '}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="edge-sequence-section">
+          <strong>Edge Processing Sequence:</strong>
           <div className="edge-sequence-visualization">
             {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
               <div 
