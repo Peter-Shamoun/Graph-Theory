@@ -573,34 +573,6 @@ export default function GraphEditor() {
             <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
           </div>
         </div>
-
-        {/* Algorithm Controls */}
-        <div className="right-controls">
-          <button 
-            className="btn btn-primary"
-            onClick={() => {
-              setMode('bfs');
-              alert('Click a node to start BFS');
-            }}
-            disabled={bfsAnimationState.isRunning}
-          >
-            Start BFS
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={togglePauseBFS}
-            disabled={!bfsAnimationState.isRunning}
-          >
-            {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={resetBFS}
-            disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
-          >
-            Reset BFS
-          </button>
-        </div>
       </div>
 
       <div className="graph-container">
