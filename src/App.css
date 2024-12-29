@@ -720,3 +720,30 @@ body {
   background-color: #fca5a5;
   color: #7f1d1d;
 }
+
+.edge-sequence-visualization {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  font-family: monospace;
+}
+
+.edge-item {
+  font-size: 0.9rem;
+}
+
+.edge-item.current {
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.edge-sequence-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 0.5rem;
+}

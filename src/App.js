@@ -907,26 +907,33 @@ export default function GraphEditor() {
       .map(pair => pair.id);
   };
 
-  const startBellmanFord = (sourceNodeId) => {
+  const startBellmanFord = () => {
     if (bellmanFordAnimationState.isRunning) return;
     
-    const sourceNode = nodes.find(n => n.id === sourceNodeId);
-    if (!sourceNode) return;
-
-    // Initialize distances and predecessors
+    // Initialize distances and predecessors for all nodes
     const initialDistances = {};
     const initialPredecessors = {};
     nodes.forEach(node => {
       initialDistances[node.uniqueId] = Infinity;
       initialPredecessors[node.uniqueId] = null;
     });
+    
+    // Select first node as source
+    const sourceNode = nodes[0];
+    if (!sourceNode) return;
+    
     initialDistances[sourceNode.uniqueId] = 0;
 
-    // Create random edge order for visualization
-    const randomEdgeOrder = [...edges]
-      .map(edge => ({ ...edge, random: Math.random() }))
-      .sort((a, b) => a.random - b.random)
-      .map(({ id, source, target, weight }) => ({ id, source, target, weight }));
+    // Create edge sequence for visualization
+    const edgeSequence = [];
+    for (let i = 0; i < nodes.length - 1; i++) {
+      edges.forEach(edge => {
+        edgeSequence.push({
+          ...edge,
+          iteration: i + 1
+        });
+      });
+    }
 
     setBellmanFordAnimationState(prev => ({
       ...prev,
@@ -938,10 +945,15 @@ export default function GraphEditor() {
       sourceNode: sourceNode.uniqueId,
       predecessors: initialPredecessors,
       distances: initialDistances,
-      iteration: 0,
-      edgeOrder: randomEdgeOrder,
+      iteration: 1,
+      edgeOrder: edgeSequence,
       hasNegativeCycle: false,
-      currentStep: 0
+      currentStep: 0,
+      edgeSequenceDisplay: edgeSequence.map(edge => ({
+        from: nodes.find(n => n.uniqueId === edge.source)?.id,
+        to: nodes.find(n => n.uniqueId === edge.target)?.id,
+        iteration: edge.iteration
+      }))
     }));
 
     runBellmanFordStep();
@@ -1039,6 +1051,92 @@ export default function GraphEditor() {
       currentStep: 0
     });
   };
+
+  // Update the algorithm section UI
+  const BellmanFordSection = () => (
+    <div className="algorithm-section">
+      <h3>Bellman Ford</h3>
+      <div className="algorithm-controls">
+        <button 
+          className="btn btn-primary"
+          onClick={startBellmanFord}
+          disabled={bellmanFordAnimationState.isRunning || nodes.length === 0}
+        >
+          Start Bellman Ford
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={togglePauseBellmanFord}
+          disabled={!bellmanFordAnimationState.isRunning}
+        >
+          {bellmanFordAnimationState.isPaused ? 'Resume' : 'Pause'} Bellman Ford
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={resetBellmanFord}
+          disabled={!bellmanFordAnimationState.isRunning && !bellmanFordAnimationState.visitedNodes.size}
+        >
+          Reset Bellman Ford
+        </button>
+      </div>
+    </div>
+  );
+
+  // Add this to your status display section
+  const BellmanFordStatus = () => (
+    <div className="bellman-ford-status-container">
+      <h3>Bellman-Ford Status</h3>
+      <div className="bellman-ford-status">
+        <div className="current-state">
+          <strong>Iteration:</strong> {bellmanFordAnimationState.iteration}/{nodes.length - 1}
+        </div>
+        
+        <div className="edge-sequence-section">
+          <strong>Edge Sequence:</strong>
+          <div className="edge-sequence-visualization">
+            {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
+              <div 
+                key={index} 
+                className={`edge-item ${index === bellmanFordAnimationState.currentStep ? 'current' : ''}`}
+              >
+                (v{edge.from}, v{edge.to})
+                {index < bellmanFordAnimationState.edgeSequenceDisplay.length - 1 && ', '}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="distances-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Node</th>
+                <th>Distance</th>
+                <th>Predecessor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {nodes.sort((a, b) => a.id - b.id).map(node => (
+                <tr key={node.id}>
+                  <td>v{node.id}</td>
+                  <td>
+                    {bellmanFordAnimationState.distances[node.uniqueId] === Infinity 
+                      ? '∞' 
+                      : bellmanFordAnimationState.distances[node.uniqueId]}
+                  </td>
+                  <td>
+                    {bellmanFordAnimationState.predecessors[node.uniqueId] 
+                      ? `v${nodes.find(n => n.uniqueId === bellmanFordAnimationState.predecessors[node.uniqueId])?.id}` 
+                      : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="graph-editor">
