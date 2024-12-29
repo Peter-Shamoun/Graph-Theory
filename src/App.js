@@ -706,7 +706,7 @@ export default function GraphEditor() {
       case 'dfs':
         return 'Select Node for DFS';
       case 'timed_dfs':
-        return 'Select Node for Timed DFS';
+        return 'Select Node for Topological Sort (DFS)';
       default:
         return mode;
     }
