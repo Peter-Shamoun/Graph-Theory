@@ -58,7 +58,8 @@ export default function GraphEditor() {
     distances: {},
     startTimes: {},
     finishTimes: {},
-    time: 0
+    time: 0,
+    hasBackEdge: false
   });
 
   // A ref to keep track of the next node id
@@ -777,10 +778,25 @@ export default function GraphEditor() {
       const currentNodeId = nodes.find(n => n.uniqueId === currentNode).id;
       const adjList = getAdjacencyList();
       
-      // Get unvisited neighbors
-      const neighbors = adjList[currentNodeId]
+      // Get all neighbors (not just unvisited ones)
+      const allNeighbors = adjList[currentNodeId]
         .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
-        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+        .filter(nodeId => nodeId);
+
+      // Check for back edges
+      let foundBackEdge = prev.hasBackEdge;
+      if (isDirected) {  // Only check for back edges in directed graphs
+        allNeighbors.forEach(neighborId => {
+          if (prev.visitedNodes.has(neighborId) && 
+              prev.stack.includes(neighborId) && 
+              !prev.finishTimes[neighborId]) {
+            foundBackEdge = true;
+          }
+        });
+      }
+
+      // Get unvisited neighbors (original logic)
+      const neighbors = allNeighbors.filter(nodeId => !prev.visitedNodes.has(nodeId));
 
       if (neighbors.length > 0) {
         // Visit the first unvisited neighbor
@@ -810,7 +826,8 @@ export default function GraphEditor() {
           predecessors: newPredecessors,
           distances: newDistances,
           startTimes: { ...prev.startTimes, [nextNode]: newTime },
-          time: newTime
+          time: newTime,
+          hasBackEdge: foundBackEdge
         };
       } else {
         // No unvisited neighbors, finish current node
@@ -822,7 +839,8 @@ export default function GraphEditor() {
           stack: newStack,
           currentNode: newStack[newStack.length - 1] || null,
           finishTimes: { ...prev.finishTimes, [currentNode]: newTime },
-          time: newTime
+          time: newTime,
+          hasBackEdge: foundBackEdge
         };
       }
     });
@@ -862,7 +880,8 @@ export default function GraphEditor() {
       distances: {},
       startTimes: {},
       finishTimes: {},
-      time: 0
+      time: 0,
+      hasBackEdge: false
     });
   };
 
@@ -1217,6 +1236,18 @@ export default function GraphEditor() {
                     </tbody>
                   </table>
                 </div>
+
+                {!timedDfsAnimationState.isRunning && timedDfsAnimationState.visitedNodes.size > 0 && (
+                  <div className={`topological-sort-status ${!isDirected || timedDfsAnimationState.hasBackEdge ? 'invalid' : 'valid'}`}>
+                    {!isDirected ? (
+                      "Topological Sort: Not Applicable (Undirected Graph)"
+                    ) : timedDfsAnimationState.hasBackEdge ? (
+                      "Topological Sort: Invalid (Cycle Detected)"
+                    ) : (
+                      "Topological Sort: Valid (No Cycles)"
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

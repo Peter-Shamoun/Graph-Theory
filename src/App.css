@@ -631,3 +631,21 @@ body {
 .timed-dfs-table tr:nth-child(even) {
   background-color: var(--background);
 }
+
+.topological-sort-status {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.topological-sort-status.valid {
+  background-color: #86efac;
+  color: #14532d;
+}
+
+.topological-sort-status.invalid {
+  background-color: #fca5a5;
+  color: #7f1d1d;
+}
