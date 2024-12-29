@@ -693,11 +693,14 @@ export default function GraphEditor() {
   // Update node rendering to include DFS highlighting
   const getNodeFill = (node) => {
     if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
-    if (dfsAnimationState.currentNode === node.uniqueId) return "#ff4500";
+    if (dfsAnimationState.currentNode === node.uniqueId || 
+        timedDfsAnimationState.currentNode === node.uniqueId) return "#ff4500";
     if (bfsAnimationState.visitedNodes.has(node.uniqueId)) return "#90EE90";
-    if (dfsAnimationState.visitedNodes.has(node.uniqueId)) return "#98FB98";
+    if (dfsAnimationState.visitedNodes.has(node.uniqueId) || 
+        timedDfsAnimationState.visitedNodes.has(node.uniqueId)) return "#98FB98";
     if (bfsAnimationState.sourceNode === node.uniqueId || 
-        dfsAnimationState.sourceNode === node.uniqueId) return "#FFD700";
+        dfsAnimationState.sourceNode === node.uniqueId ||
+        timedDfsAnimationState.sourceNode === node.uniqueId) return "#FFD700";
     return "lightblue";
   };
 
