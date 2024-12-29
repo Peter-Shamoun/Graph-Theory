@@ -46,6 +46,20 @@ export default function GraphEditor() {
     predecessors: {},
     distances: {},
   });
+  const [timedDfsAnimationState, setTimedDfsAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    stack: [],
+    currentNode: null,
+    sourceNode: null,
+    predecessors: {},
+    distances: {},
+    startTimes: {},
+    finishTimes: {},
+    time: 0
+  });
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -706,6 +720,140 @@ export default function GraphEditor() {
     }
   };
 
+  // Add these new functions for Timed DFS
+  const startTimedDFS = (sourceNodeId) => {
+    if (timedDfsAnimationState.isRunning) return;
+    
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+
+    const initialDistances = {};
+    const initialPredecessors = {};
+    nodes.forEach(node => {
+      initialDistances[node.uniqueId] = Infinity;
+      initialPredecessors[node.uniqueId] = null;
+    });
+
+    initialDistances[sourceNode.uniqueId] = 0;
+
+    setTimedDfsAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      stack: [sourceNode.uniqueId],
+      currentNode: sourceNode.uniqueId,
+      sourceNode: sourceNode.uniqueId,
+      predecessors: initialPredecessors,
+      distances: initialDistances,
+      startTimes: { [sourceNode.uniqueId]: 1 },
+      finishTimes: {},
+      time: 1
+    }));
+
+    runTimedDFSStep();
+  };
+
+  const runTimedDFSStep = async () => {
+    setTimedDfsAnimationState(prev => {
+      if (prev.stack.length === 0 || prev.isPaused) {
+        return prev;
+      }
+
+      const currentNode = prev.stack[prev.stack.length - 1];
+      const currentNodeId = nodes.find(n => n.uniqueId === currentNode).id;
+      const adjList = getAdjacencyList();
+      
+      // Get unvisited neighbors
+      const neighbors = adjList[currentNodeId]
+        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
+        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+
+      if (neighbors.length > 0) {
+        // Visit the first unvisited neighbor
+        const nextNode = neighbors[0];
+        const newTime = prev.time + 1;
+        
+        // Update predecessors and distances
+        const newPredecessors = { ...prev.predecessors };
+        const newDistances = { ...prev.distances };
+        newPredecessors[nextNode] = currentNode;
+        newDistances[nextNode] = prev.distances[currentNode] + 1;
+
+        // Add edge to visited edges
+        const newVisitedEdges = new Set(prev.visitedEdges);
+        const edge = edges.find(e => 
+          (e.source === currentNode && e.target === nextNode) ||
+          (!isDirected && e.target === currentNode && e.source === nextNode)
+        );
+        if (edge) newVisitedEdges.add(edge.id);
+
+        return {
+          ...prev,
+          stack: [...prev.stack, nextNode],
+          visitedNodes: new Set([...prev.visitedNodes, nextNode]),
+          visitedEdges: newVisitedEdges,
+          currentNode: nextNode,
+          predecessors: newPredecessors,
+          distances: newDistances,
+          startTimes: { ...prev.startTimes, [nextNode]: newTime },
+          time: newTime
+        };
+      } else {
+        // No unvisited neighbors, finish current node
+        const newStack = prev.stack.slice(0, -1);
+        const newTime = prev.time + 1;
+        
+        return {
+          ...prev,
+          stack: newStack,
+          currentNode: newStack[newStack.length - 1] || null,
+          finishTimes: { ...prev.finishTimes, [currentNode]: newTime },
+          time: newTime
+        };
+      }
+    });
+
+    setTimeout(() => {
+      setTimedDfsAnimationState(prev => {
+        if (prev.stack.length > 0 && !prev.isPaused) {
+          runTimedDFSStep();
+        } else if (prev.stack.length === 0) {
+          return { ...prev, isRunning: false };
+        }
+        return prev;
+      });
+    }, getAnimationDelay());
+  };
+
+  const togglePauseTimedDFS = () => {
+    setTimedDfsAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.stack.length > 0) {
+        runTimedDFSStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetTimedDFS = () => {
+    setTimedDfsAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      stack: [],
+      currentNode: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+      startTimes: {},
+      finishTimes: {},
+      time: 0
+    });
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -1014,6 +1162,32 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {(timedDfsAnimationState.isRunning || timedDfsAnimationState.visitedNodes.size > 0) && (
+            <div className="timed-dfs-status-container">
+              <h3>Timed DFS Status</h3>
+              <div className="timed-dfs-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Node</th>
+                      <th>Start</th>
+                      <th>Finish</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nodes.sort((a, b) => a.id - b.id).map(node => (
+                      <tr key={node.id}>
+                        <td>{node.id}</td>
+                        <td>{timedDfsAnimationState.startTimes[node.uniqueId] || '-'}</td>
+                        <td>{timedDfsAnimationState.finishTimes[node.uniqueId] || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -1075,6 +1249,36 @@ export default function GraphEditor() {
                 disabled={!dfsAnimationState.isRunning && !dfsAnimationState.visitedNodes.size}
               >
                 Reset DFS
+              </button>
+            </div>
+          </div>
+
+          <div className="algorithm-section">
+            <h3>Timed Depth-First Search</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setMode('timed_dfs');
+                  alert('Click a node to start Timed DFS');
+                }}
+                disabled={timedDfsAnimationState.isRunning}
+              >
+                Start Timed DFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseTimedDFS}
+                disabled={!timedDfsAnimationState.isRunning}
+              >
+                {timedDfsAnimationState.isPaused ? 'Resume' : 'Pause'} Timed DFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetTimedDFS}
+                disabled={!timedDfsAnimationState.isRunning && !timedDfsAnimationState.visitedNodes.size}
+              >
+                Reset Timed DFS
               </button>
             </div>
           </div>

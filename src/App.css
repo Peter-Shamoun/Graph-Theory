@@ -596,3 +596,38 @@ body {
 .current-state-text {
   text-transform: capitalize;
 }
+
+.timed-dfs-status-container {
+  width: 100%;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.timed-dfs-table {
+  overflow-x: auto;
+}
+
+.timed-dfs-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.timed-dfs-table th,
+.timed-dfs-table td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--secondary);
+}
+
+.timed-dfs-table th {
+  background-color: var(--background);
+  font-weight: bold;
+}
+
+.timed-dfs-table tr:nth-child(even) {
+  background-color: var(--background);
+}
