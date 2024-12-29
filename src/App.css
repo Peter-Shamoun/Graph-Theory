@@ -411,154 +411,45 @@ body {
 }
 
 .main-content {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 300px; /* Main content and algorithm sidebar */
   gap: 2rem;
   margin: 2rem 1rem;
 }
 
+/* Left side container for graph and status boxes */
 .graph-container {
-  width: 100%;
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
+/* Right side algorithm container */
 .algorithm-container {
-  width: 100%;
+  grid-column: 2;
   background: var(--surface);
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
 }
 
-.algorithm-container h2 {
-  margin-bottom: 1.5rem;
-  color: var(--primary);
-  font-size: 1.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--primary);
-}
-
-.algorithm-section {
-  margin-bottom: 2rem;
-}
-
-.algorithm-section h3 {
-  margin-bottom: 1rem;
-  color: var(--text);
-  font-size: 1.2rem;
-}
-
-.algorithm-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.algorithm-controls .btn {
-  width: 100%;
-}
-
-/* If you need to specifically target the "Empty graph" text */
-.matrix-list h2, .adjacency-list h2,
-.matrix-list p, .adjacency-list p {
-  font-family: monospace;
-}
-
-.dictionary-section {
-  margin-top: 1rem;
-}
-
-.dictionary-visualization {
-  background: var(--background);
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  font-family: monospace;
-}
-
-.dictionary-item {
-  padding: 0.25rem 0;
-}
-
-.bfs-status {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.bfs-status > div {
-  background: var(--background);
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.bfs-status-container {
-  margin-top: 2rem;
-  background: var(--surface);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.bfs-status {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.current-node,
-.queue-section,
-.dictionary-section {
-  width: 100%;
-  background: var(--background);
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-.queue-visualization {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  overflow-x: auto;
-  padding: 0.5rem;
-}
-
-.dictionary-visualization {
-  margin-top: 0.5rem;
-  font-family: monospace;
-}
-
-.dictionary-item {
-  padding: 0.25rem 0;
-}
-
-.queue-item {
-  padding: 0.5rem 1rem;
-  background: var(--primary);
-  color: white;
-  border-radius: 0.25rem;
-  font-size: 0.9rem;
-}
-
-/* Update existing styles */
-.graph-container {
-  width: 100%;
-}
-
-.matrix-list-container {
-  margin-top: 2rem;
-}
-
-/* Add DFS-specific styles */
+/* Status containers at the bottom */
+.bfs-status-container,
 .dfs-status-container {
-  margin-top: 2rem;
+  width: 100%;
   background: var(--surface);
   padding: 1rem;
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  margin-top: 2rem;
 }
 
+/* Status grids */
+.bfs-status,
 .dfs-status {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -566,49 +457,33 @@ body {
   margin-top: 1rem;
 }
 
-.stack-section {
-  background: var(--background);
-  padding: 1rem;
-  border-radius: 0.5rem;
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .main-content {
+    grid-template-columns: 1fr 250px;
+  }
 }
 
-.stack-visualization {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  overflow-x: auto;
-}
-
-.stack-item {
-  padding: 0.5rem 1rem;
-  background: var(--accent);
-  color: white;
-  border-radius: 0.25rem;
-  font-size: 0.9rem;
-  text-align: center;
-  min-width: fit-content;
-}
-
-/* Ensure consistent section widths */
-.current-node,
-.stack-section,
-.dictionary-section {
-  width: 100%;
-  background: var(--background);
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-/* Add responsive adjustments */
 @media (max-width: 1200px) {
+  .bfs-status,
   .dfs-status {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
+@media (max-width: 992px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .algorithm-container {
+    grid-column: 1;
+    position: static;
+  }
+}
+
 @media (max-width: 768px) {
+  .bfs-status,
   .dfs-status {
     grid-template-columns: 1fr;
   }
