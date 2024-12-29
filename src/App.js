@@ -686,10 +686,14 @@ export default function GraphEditor() {
 
   // Update node rendering to include DFS highlighting
   const getNodeFill = (node) => {
-    if (bellmanFordAnimationState.currentEdge && 
-        (edges.find(e => e.id === bellmanFordAnimationState.currentEdge)?.source === node.uniqueId ||
-         edges.find(e => e.id === bellmanFordAnimationState.currentEdge)?.target === node.uniqueId)) {
-      return "#ff8c00";
+    if (bellmanFordAnimationState.currentEdge) {
+      const currentEdge = edges.find(e => e.id === bellmanFordAnimationState.currentEdge);
+      if (currentEdge && (currentEdge.source === node.uniqueId || currentEdge.target === node.uniqueId)) {
+        return "#ff8c00";
+      }
+    }
+    if (bellmanFordAnimationState.sourceNode === node.uniqueId) {
+      return "#FFD700";
     }
     if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
     if (dfsAnimationState.currentNode === node.uniqueId || 
@@ -971,13 +975,13 @@ export default function GraphEditor() {
       const { source, target, weight } = edge;
 
       // Perform relaxation
+      const newDistances = { ...prev.distances };
+      const newPredecessors = { ...prev.predecessors };
       const newDistance = prev.distances[source] + weight;
-      let updated = false;
 
       if (newDistance < prev.distances[target]) {
-        prev.distances[target] = newDistance;
-        prev.predecessors[target] = source;
-        updated = true;
+        newDistances[target] = newDistance;
+        newPredecessors[target] = source;
       }
 
       // Update state
@@ -993,8 +997,8 @@ export default function GraphEditor() {
         currentEdge: edge.id,
         currentStep: nextStep,
         iteration: nextIteration,
-        distances: { ...prev.distances },
-        predecessors: { ...prev.predecessors }
+        distances: newDistances,
+        predecessors: newPredecessors
       };
     });
 
@@ -1007,6 +1011,33 @@ export default function GraphEditor() {
         return prev;
       });
     }, getAnimationDelay());
+  };
+
+  const togglePauseBellmanFord = () => {
+    setBellmanFordAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.isRunning) {
+        runBellmanFordStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetBellmanFord = () => {
+    setBellmanFordAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      currentEdge: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+      iteration: 0,
+      edgeOrder: [],
+      hasNegativeCycle: false,
+      currentStep: 0
+    });
   };
 
   return (
