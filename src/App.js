@@ -1178,25 +1178,45 @@ export default function GraphEditor() {
           {(timedDfsAnimationState.isRunning || timedDfsAnimationState.visitedNodes.size > 0) && (
             <div className="timed-dfs-status-container">
               <h3>Timed DFS Status</h3>
-              <div className="timed-dfs-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Node</th>
-                      <th>Start</th>
-                      <th>Finish</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {nodes.sort((a, b) => a.id - b.id).map(node => (
-                      <tr key={node.id}>
-                        <td>{node.id}</td>
-                        <td>{timedDfsAnimationState.startTimes[node.uniqueId] || '-'}</td>
-                        <td>{timedDfsAnimationState.finishTimes[node.uniqueId] || '-'}</td>
-                      </tr>
+              <div className="dfs-status">
+                <div className="current-node">
+                  <strong>Current Node:</strong> {
+                    timedDfsAnimationState.currentNode ? 
+                    ` Node ${nodes.find(n => n.uniqueId === timedDfsAnimationState.currentNode)?.id}` : 
+                    ' None'
+                  }
+                </div>
+                <div className="stack-section">
+                  <strong>Stack:</strong>
+                  <div className="stack-visualization">
+                    {timedDfsAnimationState.stack.map((nodeId, index) => (
+                      <div key={index} className="stack-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+                
+                <div className="timed-dfs-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Node</th>
+                        <th>Start</th>
+                        <th>Finish</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nodes.sort((a, b) => a.id - b.id).map(node => (
+                        <tr key={node.id}>
+                          <td>{node.id}</td>
+                          <td>{timedDfsAnimationState.startTimes[node.uniqueId] || '-'}</td>
+                          <td>{timedDfsAnimationState.finishTimes[node.uniqueId] || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
