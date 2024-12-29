@@ -828,7 +828,9 @@ export default function GraphEditor() {
                   e.stopPropagation();
                   if (mode === 'bfs') {
                     startBFS(node.id);
-                  } else if (!bfsAnimationState.isRunning) {
+                  } else if (mode === 'dfs') {
+                    startDFS(node.id);
+                  } else if (!bfsAnimationState.isRunning && !dfsAnimationState.isRunning) {
                     handleNodeClick(node.id, node.uniqueId, e);
                   }
                 }}
