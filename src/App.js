@@ -890,6 +890,20 @@ export default function GraphEditor() {
     });
   };
 
+  // First, add a helper function to get the topological sort
+  const getTopologicalSort = (finishTimes) => {
+    // Convert finish times object to array of [nodeId, finishTime] pairs
+    const pairs = Object.entries(finishTimes).map(([uniqueId, time]) => ({
+      uniqueId,
+      id: nodes.find(n => n.uniqueId === uniqueId)?.id,
+      time
+    }));
+    
+    // Sort by finish times in descending order
+    return pairs.sort((a, b) => b.time - a.time)
+      .map(pair => pair.id);
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -1243,15 +1257,31 @@ export default function GraphEditor() {
                 </div>
 
                 {!timedDfsAnimationState.isRunning && timedDfsAnimationState.visitedNodes.size > 0 && (
-                  <div className={`topological-sort-status ${!isDirected || timedDfsAnimationState.hasBackEdge ? 'invalid' : 'valid'}`}>
-                    {!isDirected ? (
-                      "Topological Sort: Not Applicable (Undirected Graph)"
-                    ) : timedDfsAnimationState.hasBackEdge ? (
-                      "Topological Sort: Invalid (Cycle Detected)"
-                    ) : (
-                      "Topological Sort: Valid (No Cycles)"
+                  <>
+                    <div className={`topological-sort-status ${!isDirected || timedDfsAnimationState.hasBackEdge ? 'invalid' : 'valid'}`}>
+                      {!isDirected ? (
+                        "Topological Sort: Not Applicable (Undirected Graph)"
+                      ) : timedDfsAnimationState.hasBackEdge ? (
+                        "Topological Sort: Invalid (Cycle Detected)"
+                      ) : (
+                        "Topological Sort: Valid (No Cycles)"
+                      )}
+                    </div>
+
+                    {isDirected && !timedDfsAnimationState.hasBackEdge && (
+                      <div className="topological-sort-result">
+                        <strong>Topological Sort:</strong>
+                        <div className="sort-visualization">
+                          {getTopologicalSort(timedDfsAnimationState.finishTimes).map((nodeId, index) => (
+                            <div key={index} className="sort-item">
+                              {nodeId}
+                              {index < nodes.length - 1 && " → "}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                  </div>
+                  </>
                 )}
               </div>
             </div>

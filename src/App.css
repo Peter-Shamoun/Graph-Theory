@@ -649,3 +649,30 @@ body {
   background-color: #fca5a5;
   color: #7f1d1d;
 }
+
+.topological-sort-result {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  background-color: var(--surface);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.sort-visualization {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background);
+  border-radius: 0.25rem;
+}
+
+.sort-item {
+  font-weight: bold;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+}
