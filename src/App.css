@@ -574,3 +574,25 @@ body {
   border-radius: 0.25rem;
   font-size: 0.9rem;
 }
+
+/* Add these new styles */
+.current-state {
+  padding: 0.75rem 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.current-state-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+}
+
+.current-state-text {
+  text-transform: capitalize;
+}

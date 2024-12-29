@@ -681,6 +681,31 @@ export default function GraphEditor() {
     return "lightblue";
   };
 
+  // Add this helper function inside the GraphEditor component
+  const getCurrentStateText = () => {
+    if (bfsAnimationState.isRunning) return 'Running BFS';
+    if (dfsAnimationState.isRunning) return 'Running DFS';
+    
+    switch (mode) {
+      case 'add_node':
+        return 'Adding Nodes';
+      case 'add_edge':
+        return 'Adding Edges';
+      case 'delete':
+        return 'Delete Mode';
+      case 'rename_edge':
+        return 'Change Edge Weight';
+      case 'drag':
+        return 'Drag Mode';
+      case 'bfs':
+        return 'Select Node for BFS';
+      case 'dfs':
+        return 'Select Node for DFS';
+      default:
+        return mode;
+    }
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -689,6 +714,11 @@ export default function GraphEditor() {
 
       <div className="graph-editor__controls">
         <div className="left-controls">
+          <div className="current-state">
+            <div className="current-state-indicator"></div>
+            <span className="current-state-text">Current Mode: {getCurrentStateText()}</span>
+          </div>
+          
           {/* Graph Type and Speed Controls */}
           <div className="control-group">
             <div className="radio-group">
