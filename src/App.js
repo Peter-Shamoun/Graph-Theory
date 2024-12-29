@@ -446,11 +446,11 @@ export default function GraphEditor() {
         queue: [...newQueue, ...neighbors],
         visitedNodes: new Set([...prev.visitedNodes, ...neighbors]),
         visitedEdges: newVisitedEdges,
-        currentNode: neighbors.length > 0 ? currentNode : newQueue[0]
+        currentNode: currentNode // Always set current node to the one being processed
       };
     });
 
-    // Use the dynamic animation delay
+    // Continue animation after a delay
     setTimeout(() => {
       setBfsAnimationState(prev => {
         if (prev.queue.length > 0 && !prev.isPaused) {
