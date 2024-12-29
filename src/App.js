@@ -575,186 +575,185 @@ export default function GraphEditor() {
         </div>
       </div>
 
-      <div className="graph-container">
-        <svg
-          className="graph-canvas"
-          width="1000"
-          height="600"
-          onClick={handleSvgClick}
-        >
-          <defs>
-            <marker
-              id="arrowhead"
-              viewBox="0 0 10 10"
-              refX="21"
-              refY="5"
-              markerWidth="8"
-              markerHeight="8"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
-            </marker>
-          </defs>
-
-          {edges.map((edge) => {
-            const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
-            const targetNode = nodes.find((n) => n.uniqueId === edge.target);
-            if (!sourceNode || !targetNode) return null;
-
-            const [mx, my] = getMidpoint(
-              sourceNode.x,
-              sourceNode.y,
-              targetNode.x,
-              targetNode.y
-            );
-
-            return (
-              <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
-                <line
-                  x1={sourceNode.x}
-                  y1={sourceNode.y}
-                  x2={targetNode.x}
-                  y2={targetNode.y}
-                  stroke={bfsAnimationState.visitedEdges.has(edge.id) ? "#90EE90" : "black"}
-                  strokeWidth={bfsAnimationState.visitedEdges.has(edge.id) ? "3" : "2"}
-                  style={{
-                    markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
-                  }}
-                />
-                {isWeighted && (
-                  <text
-                    x={mx}
-                    y={my}
-                    dy="-5"
-                    textAnchor="middle"
-                    style={{ fontSize: '12px', fill: 'red' }}
-                  >
-                    {edge.weight}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-
-          {nodes.map((node) => (
-            <g
-              key={node.uniqueId}
-              className="node"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (mode === 'bfs') {
-                  startBFS(node.id);
-                } else if (!bfsAnimationState.isRunning) {
-                  handleNodeClick(node.id, node.uniqueId, e);
-                }
-              }}
-              style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
-              ref={(el) => {
-                if (el) {
-                  d3.select(el).datum(node);
-                }
-              }}
-            >
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={20}
-                fill={
-                  bfsAnimationState.currentNode === node.uniqueId ? "#ff8c00" :
-                  bfsAnimationState.visitedNodes.has(node.uniqueId) ? "#90EE90" :
-                  bfsAnimationState.sourceNode === node.uniqueId ? "#FFD700" :
-                  "lightblue"
-                }
-                stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
-                strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
-              />
-              <text
-                x={node.x}
-                y={node.y}
-                textAnchor="middle"
-                dy=".3em"
-                style={{ fontWeight: 'bold' }}
+      <div className="main-content">
+        <div className="graph-container">
+          <svg
+            className="graph-canvas"
+            width="1000"
+            height="600"
+            onClick={handleSvgClick}
+          >
+            <defs>
+              <marker
+                id="arrowhead"
+                viewBox="0 0 10 10"
+                refX="21"
+                refY="5"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto-start-reverse"
               >
-                {node.id}
-              </text>
-            </g>
-          ))}
-        </svg>
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
+              </marker>
+            </defs>
 
-        <div className="matrix-list-container">
-          <div className="matrix-list">
-            <h2>Adjacency Matrix</h2>
-            {renderAdjacencyMatrix()}
-          </div>
+            {edges.map((edge) => {
+              const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
+              const targetNode = nodes.find((n) => n.uniqueId === edge.target);
+              if (!sourceNode || !targetNode) return null;
 
-          <div className="adjacency-list">
-            <h2>Adjacency List</h2>
-            <pre>{getFormattedAdjacencyList()}</pre>
-          </div>
-        </div>
-      </div>
+              const [mx, my] = getMidpoint(
+                sourceNode.x,
+                sourceNode.y,
+                targetNode.x,
+                targetNode.y
+              );
 
-      {/* New Algorithm Control Panel */}
-      <div className="algorithm-panel">
-        <h2>Algorithms</h2>
-        
-        <div className="algorithm-section">
-          <h3>Breadth-First Search</h3>
-          <div className="algorithm-controls">
-            <button 
-              className="btn btn-primary"
-              onClick={() => {
-                setMode('bfs');
-                alert('Click a node to start BFS');
-              }}
-              disabled={bfsAnimationState.isRunning}
-            >
-              Start BFS
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={togglePauseBFS}
-              disabled={!bfsAnimationState.isRunning}
-            >
-              {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={resetBFS}
-              disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
-            >
-              Reset BFS
-            </button>
-          </div>
-        </div>
-        
-        {/* Future algorithm sections will go here */}
-      </div>
+              return (
+                <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
+                  <line
+                    x1={sourceNode.x}
+                    y1={sourceNode.y}
+                    x2={targetNode.x}
+                    y2={targetNode.y}
+                    stroke={bfsAnimationState.visitedEdges.has(edge.id) ? "#90EE90" : "black"}
+                    strokeWidth={bfsAnimationState.visitedEdges.has(edge.id) ? "3" : "2"}
+                    style={{
+                      markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
+                    }}
+                  />
+                  {isWeighted && (
+                    <text
+                      x={mx}
+                      y={my}
+                      dy="-5"
+                      textAnchor="middle"
+                      style={{ fontSize: '12px', fill: 'red' }}
+                    >
+                      {edge.weight}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
 
-      {bfsAnimationState.isRunning && (
-        <div className="bfs-queue">
-          <h3>BFS Status</h3>
-          <div className="bfs-status">
-            <div className="current-node">
-              <strong>Current Node:</strong> {
-                bfsAnimationState.currentNode ? 
-                ` Node ${nodes.find(n => n.uniqueId === bfsAnimationState.currentNode)?.id}` : 
-                ' None'
-              }
+            {nodes.map((node) => (
+              <g
+                key={node.uniqueId}
+                className="node"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (mode === 'bfs') {
+                    startBFS(node.id);
+                  } else if (!bfsAnimationState.isRunning) {
+                    handleNodeClick(node.id, node.uniqueId, e);
+                  }
+                }}
+                style={{ cursor: mode === 'drag' ? 'move' : 'pointer' }}
+                ref={(el) => {
+                  if (el) {
+                    d3.select(el).datum(node);
+                  }
+                }}
+              >
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={20}
+                  fill={
+                    bfsAnimationState.currentNode === node.uniqueId ? "#ff8c00" :
+                    bfsAnimationState.visitedNodes.has(node.uniqueId) ? "#90EE90" :
+                    bfsAnimationState.sourceNode === node.uniqueId ? "#FFD700" :
+                    "lightblue"
+                  }
+                  stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
+                  strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
+                />
+                <text
+                  x={node.x}
+                  y={node.y}
+                  textAnchor="middle"
+                  dy=".3em"
+                  style={{ fontWeight: 'bold' }}
+                >
+                  {node.id}
+                </text>
+              </g>
+            ))}
+          </svg>
+
+          <div className="matrix-list-container">
+            <div className="matrix-list">
+              <h2>Adjacency Matrix</h2>
+              {renderAdjacencyMatrix()}
             </div>
-            <div className="queue-section">
-              <strong>Queue:</strong>
-              <div className="queue-visualization">
-                {bfsAnimationState.queue.map((nodeId, index) => (
-                  <div key={index} className="queue-item">
-                    Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+
+            <div className="adjacency-list">
+              <h2>Adjacency List</h2>
+              <pre>{getFormattedAdjacencyList()}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div className="algorithm-container">
+          <h2>Algorithms</h2>
+          
+          <div className="algorithm-section">
+            <h3>Breadth-First Search</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setMode('bfs');
+                  alert('Click a node to start BFS');
+                }}
+                disabled={bfsAnimationState.isRunning}
+              >
+                Start BFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseBFS}
+                disabled={!bfsAnimationState.isRunning}
+              >
+                {bfsAnimationState.isPaused ? 'Resume' : 'Pause'} BFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetBFS}
+                disabled={!bfsAnimationState.isRunning && !bfsAnimationState.visitedNodes.size}
+              >
+                Reset BFS
+              </button>
+            </div>
+          </div>
+
+          {bfsAnimationState.isRunning && (
+            <div className="bfs-queue">
+              <h3>BFS Status</h3>
+              <div className="bfs-status">
+                <div className="current-node">
+                  <strong>Current Node:</strong> {
+                    bfsAnimationState.currentNode ? 
+                    ` Node ${nodes.find(n => n.uniqueId === bfsAnimationState.currentNode)?.id}` : 
+                    ' None'
+                  }
+                </div>
+                <div className="queue-section">
+                  <strong>Queue:</strong>
+                  <div className="queue-visualization">
+                    {bfsAnimationState.queue.map((nodeId, index) => (
+                      <div key={index} className="queue-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

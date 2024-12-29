@@ -24,8 +24,8 @@ body {
 }
 
 .graph-editor {
-  max-width: calc(100% - 270px); /* 250px panel + 20px gap */
-  margin: 2rem auto 2rem 1rem;
+  max-width: none;
+  margin: 2rem auto;
   padding: 0 1rem;
 }
 
@@ -401,4 +401,51 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.main-content {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 1rem;
+}
+
+.graph-container {
+  flex: 1;
+}
+
+.algorithm-container {
+  width: 300px;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  align-self: flex-start;
+}
+
+.algorithm-container h2 {
+  margin-bottom: 1.5rem;
+  color: var(--primary);
+  font-size: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary);
+}
+
+.algorithm-section {
+  margin-bottom: 2rem;
+}
+
+.algorithm-section h3 {
+  margin-bottom: 1rem;
+  color: var(--text);
+  font-size: 1.2rem;
+}
+
+.algorithm-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.algorithm-controls .btn {
+  width: 100%;
 }
