@@ -368,6 +368,12 @@ body {
 
 .algorithm-section {
   margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--background);
+}
+
+.algorithm-section:last-child {
+  border-bottom: none;
 }
 
 .algorithm-section h3 {
@@ -540,4 +546,43 @@ body {
 
 .matrix-list-container {
   margin-top: 2rem;
+}
+
+/* Add DFS-specific styles */
+.dfs-status-container {
+  margin-top: 2rem;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dfs-status {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stack-section {
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.stack-visualization {
+  display: flex;
+  flex-direction: column-reverse; /* Stack grows upward */
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+.stack-item {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  text-align: center;
 }

@@ -35,6 +35,17 @@ export default function GraphEditor() {
     distances: {},
   });
   const [animationSpeed, setAnimationSpeed] = useState(50); // Default 50%
+  const [dfsAnimationState, setDfsAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    stack: [],
+    currentNode: null,
+    sourceNode: null,
+    predecessors: {},
+    distances: {},
+  });
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -524,6 +535,139 @@ export default function GraphEditor() {
     });
   };
 
+  // Add DFS functions
+  const startDFS = (sourceNodeId) => {
+    if (dfsAnimationState.isRunning) return;
+    
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+
+    // Initialize distances and predecessors
+    const initialDistances = {};
+    const initialPredecessors = {};
+    nodes.forEach(node => {
+      initialDistances[node.uniqueId] = Infinity;
+      initialPredecessors[node.uniqueId] = null;
+    });
+
+    initialDistances[sourceNode.uniqueId] = 0;
+
+    setDfsAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      stack: [sourceNode.uniqueId],
+      currentNode: sourceNode.uniqueId,
+      sourceNode: sourceNode.uniqueId,
+      predecessors: initialPredecessors,
+      distances: initialDistances,
+    }));
+
+    runDFSStep();
+  };
+
+  const runDFSStep = async () => {
+    setDfsAnimationState(prev => {
+      if (prev.stack.length === 0 || prev.isPaused) {
+        return prev;
+      }
+
+      const currentNode = prev.stack[prev.stack.length - 1]; // Get top of stack
+      const currentNodeId = nodes.find(n => n.uniqueId === currentNode).id;
+      const adjList = getAdjacencyList();
+      
+      // Get unvisited neighbors
+      const neighbors = adjList[currentNodeId]
+        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
+        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+
+      if (neighbors.length > 0) {
+        // If there are unvisited neighbors, visit the first one
+        const nextNode = neighbors[0];
+        
+        // Update predecessors and distances
+        const newPredecessors = { ...prev.predecessors };
+        const newDistances = { ...prev.distances };
+        newPredecessors[nextNode] = currentNode;
+        newDistances[nextNode] = prev.distances[currentNode] + 1;
+
+        // Add edge to visited edges
+        const newVisitedEdges = new Set(prev.visitedEdges);
+        const edge = edges.find(e => 
+          (e.source === currentNode && e.target === nextNode) ||
+          (!isDirected && e.target === currentNode && e.source === nextNode)
+        );
+        if (edge) newVisitedEdges.add(edge.id);
+
+        return {
+          ...prev,
+          stack: [...prev.stack, nextNode],
+          visitedNodes: new Set([...prev.visitedNodes, nextNode]),
+          visitedEdges: newVisitedEdges,
+          currentNode: nextNode,
+          predecessors: newPredecessors,
+          distances: newDistances,
+        };
+      } else {
+        // If no unvisited neighbors, backtrack
+        const newStack = prev.stack.slice(0, -1);
+        return {
+          ...prev,
+          stack: newStack,
+          currentNode: newStack[newStack.length - 1] || null,
+        };
+      }
+    });
+
+    setTimeout(() => {
+      setDfsAnimationState(prev => {
+        if (prev.stack.length > 0 && !prev.isPaused) {
+          runDFSStep();
+        } else if (prev.stack.length === 0) {
+          return { ...prev, isRunning: false };
+        }
+        return prev;
+      });
+    }, getAnimationDelay());
+  };
+
+  const togglePauseDFS = () => {
+    setDfsAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.stack.length > 0) {
+        runDFSStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetDFS = () => {
+    setDfsAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      stack: [],
+      currentNode: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+    });
+  };
+
+  // Update node rendering to include DFS highlighting
+  const getNodeFill = (node) => {
+    if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
+    if (dfsAnimationState.currentNode === node.uniqueId) return "#ff4500";
+    if (bfsAnimationState.visitedNodes.has(node.uniqueId)) return "#90EE90";
+    if (dfsAnimationState.visitedNodes.has(node.uniqueId)) return "#98FB98";
+    if (bfsAnimationState.sourceNode === node.uniqueId || 
+        dfsAnimationState.sourceNode === node.uniqueId) return "#FFD700";
+    return "lightblue";
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -699,12 +843,7 @@ export default function GraphEditor() {
                   cx={node.x}
                   cy={node.y}
                   r={20}
-                  fill={
-                    bfsAnimationState.currentNode === node.uniqueId ? "#ff8c00" :
-                    bfsAnimationState.visitedNodes.has(node.uniqueId) ? "#90EE90" :
-                    bfsAnimationState.sourceNode === node.uniqueId ? "#FFD700" :
-                    "lightblue"
-                  }
+                  fill={getNodeFill(node)}
                   stroke={highlightedNodes.includes(node.uniqueId) ? "green" : "darkblue"}
                   strokeWidth={highlightedNodes.includes(node.uniqueId) ? "4" : "2"}
                 />
@@ -815,6 +954,85 @@ export default function GraphEditor() {
               </button>
             </div>
           </div>
+
+          <div className="algorithm-section">
+            <h3>Depth-First Search</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setMode('dfs');
+                  alert('Click a node to start DFS');
+                }}
+                disabled={dfsAnimationState.isRunning}
+              >
+                Start DFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseDFS}
+                disabled={!dfsAnimationState.isRunning}
+              >
+                {dfsAnimationState.isPaused ? 'Resume' : 'Pause'} DFS
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetDFS}
+                disabled={!dfsAnimationState.isRunning && !dfsAnimationState.visitedNodes.size}
+              >
+                Reset DFS
+              </button>
+            </div>
+          </div>
+
+          {(dfsAnimationState.isRunning || dfsAnimationState.visitedNodes.size > 0) && (
+            <div className="dfs-status-container">
+              <h3>DFS Status</h3>
+              <div className="dfs-status">
+                <div className="current-node">
+                  <strong>Current Node:</strong> {
+                    dfsAnimationState.currentNode ? 
+                    ` Node ${nodes.find(n => n.uniqueId === dfsAnimationState.currentNode)?.id}` : 
+                    ' None'
+                  }
+                </div>
+                <div className="stack-section">
+                  <strong>Stack:</strong>
+                  <div className="stack-visualization">
+                    {dfsAnimationState.stack.map((nodeId, index) => (
+                      <div key={index} className="stack-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="dictionary-section">
+                  <strong>Predecessors:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(dfsAnimationState.predecessors).map(([nodeId, predId]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {
+                          predId ? `Node ${nodes.find(n => n.uniqueId === predId)?.id}` : 'None'
+                        }
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dictionary-section">
+                  <strong>Distances:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(dfsAnimationState.distances).map(([nodeId, distance]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance === Infinity ? '∞' : distance}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
