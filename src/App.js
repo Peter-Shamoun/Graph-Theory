@@ -688,7 +688,7 @@ export default function GraphEditor() {
   const getCurrentStateText = () => {
     if (bfsAnimationState.isRunning) return 'Running BFS';
     if (dfsAnimationState.isRunning) return 'Running DFS';
-    if (timedDfsAnimationState.isRunning) return 'Running Timed DFS';
+    if (timedDfsAnimationState.isRunning) return 'Running Topological Sort (DFS)';
     
     switch (mode) {
       case 'add_node':
