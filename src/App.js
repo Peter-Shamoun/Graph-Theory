@@ -251,32 +251,11 @@ export default function GraphEditor() {
     setEdges([]);
     nextNodeId.current = 0;
     nextEdgeId.current = 0;
-    
-    // Reset BFS state
-    setBfsAnimationState({
-      isRunning: false,
-      isPaused: false,
-      visitedNodes: new Set(),
-      visitedEdges: new Set(),
-      queue: [],
-      currentNode: null,
-      sourceNode: null,
-      predecessors: {},
-      distances: {},
-    });
-
-    // Reset DFS state
-    setDfsAnimationState({
-      isRunning: false,
-      isPaused: false,
-      visitedNodes: new Set(),
-      visitedEdges: new Set(),
-      stack: [],
-      currentNode: null,
-      sourceNode: null,
-      predecessors: {},
-      distances: {},
-    });
+    setEdgeStart(null);
+    setHighlightedNodes([]);
+    resetBFS();
+    resetDFS();
+    resetTimedDFS();
   };
 
   // Add function to handle directed/undirected toggle
@@ -1071,7 +1050,9 @@ export default function GraphEditor() {
                     startBFS(node.id);
                   } else if (mode === 'dfs') {
                     startDFS(node.id);
-                  } else if (!bfsAnimationState.isRunning && !dfsAnimationState.isRunning) {
+                  } else if (mode === 'timed_dfs') {
+                    startTimedDFS(node.id);
+                  } else if (!bfsAnimationState.isRunning && !dfsAnimationState.isRunning && !timedDfsAnimationState.isRunning) {
                     handleNodeClick(node.id, node.uniqueId, e);
                   }
                 }}
