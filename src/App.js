@@ -243,6 +243,19 @@ export default function GraphEditor() {
       predecessors: {},
       distances: {},
     });
+
+    // Reset DFS state
+    setDfsAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      stack: [],
+      currentNode: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+    });
   };
 
   // Add function to handle directed/undirected toggle
