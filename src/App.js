@@ -61,6 +61,20 @@ export default function GraphEditor() {
     time: 0,
     hasBackEdge: false
   });
+  const [bellmanFordAnimationState, setBellmanFordAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    currentEdge: null,
+    sourceNode: null,
+    predecessors: {},
+    distances: {},
+    iteration: 0,
+    edgeOrder: [],
+    hasNegativeCycle: false,
+    currentStep: 0
+  });
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -672,6 +686,11 @@ export default function GraphEditor() {
 
   // Update node rendering to include DFS highlighting
   const getNodeFill = (node) => {
+    if (bellmanFordAnimationState.currentEdge && 
+        (edges.find(e => e.id === bellmanFordAnimationState.currentEdge)?.source === node.uniqueId ||
+         edges.find(e => e.id === bellmanFordAnimationState.currentEdge)?.target === node.uniqueId)) {
+      return "#ff8c00";
+    }
     if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
     if (dfsAnimationState.currentNode === node.uniqueId || 
         timedDfsAnimationState.currentNode === node.uniqueId) return "#ff4500";
@@ -686,6 +705,7 @@ export default function GraphEditor() {
 
   // Add this helper function inside the GraphEditor component
   const getCurrentStateText = () => {
+    if (bellmanFordAnimationState.isRunning) return 'Running Bellman-Ford';
     if (bfsAnimationState.isRunning) return 'Running BFS';
     if (dfsAnimationState.isRunning) return 'Running DFS';
     if (timedDfsAnimationState.isRunning) return 'Running Topological Sort (DFS)';
@@ -881,6 +901,112 @@ export default function GraphEditor() {
     // Sort by finish times in descending order
     return pairs.sort((a, b) => b.time - a.time)
       .map(pair => pair.id);
+  };
+
+  const startBellmanFord = (sourceNodeId) => {
+    if (bellmanFordAnimationState.isRunning) return;
+    
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+
+    // Initialize distances and predecessors
+    const initialDistances = {};
+    const initialPredecessors = {};
+    nodes.forEach(node => {
+      initialDistances[node.uniqueId] = Infinity;
+      initialPredecessors[node.uniqueId] = null;
+    });
+    initialDistances[sourceNode.uniqueId] = 0;
+
+    // Create random edge order for visualization
+    const randomEdgeOrder = [...edges]
+      .map(edge => ({ ...edge, random: Math.random() }))
+      .sort((a, b) => a.random - b.random)
+      .map(({ id, source, target, weight }) => ({ id, source, target, weight }));
+
+    setBellmanFordAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      currentEdge: null,
+      sourceNode: sourceNode.uniqueId,
+      predecessors: initialPredecessors,
+      distances: initialDistances,
+      iteration: 0,
+      edgeOrder: randomEdgeOrder,
+      hasNegativeCycle: false,
+      currentStep: 0
+    }));
+
+    runBellmanFordStep();
+  };
+
+  const runBellmanFordStep = async () => {
+    setBellmanFordAnimationState(prev => {
+      if (prev.isPaused) return prev;
+
+      const n = nodes.length;
+      
+      // Check if we've completed all iterations
+      if (prev.iteration >= n) {
+        // Check for negative cycles
+        const hasNegativeCycle = edges.some(edge => {
+          const u = edge.source;
+          const v = edge.target;
+          return prev.distances[u] + edge.weight < prev.distances[v];
+        });
+
+        return {
+          ...prev,
+          isRunning: false,
+          hasNegativeCycle
+        };
+      }
+
+      // Get current edge to process
+      const edgeIndex = prev.currentStep % prev.edgeOrder.length;
+      const edge = prev.edgeOrder[edgeIndex];
+      const { source, target, weight } = edge;
+
+      // Perform relaxation
+      const newDistance = prev.distances[source] + weight;
+      let updated = false;
+
+      if (newDistance < prev.distances[target]) {
+        prev.distances[target] = newDistance;
+        prev.predecessors[target] = source;
+        updated = true;
+      }
+
+      // Update state
+      const newVisitedEdges = new Set(prev.visitedEdges);
+      newVisitedEdges.add(edge.id);
+
+      const nextStep = prev.currentStep + 1;
+      const nextIteration = Math.floor(nextStep / prev.edgeOrder.length);
+
+      return {
+        ...prev,
+        visitedEdges: newVisitedEdges,
+        currentEdge: edge.id,
+        currentStep: nextStep,
+        iteration: nextIteration,
+        distances: { ...prev.distances },
+        predecessors: { ...prev.predecessors }
+      };
+    });
+
+    // Schedule next step
+    setTimeout(() => {
+      setBellmanFordAnimationState(prev => {
+        if (!prev.isPaused && prev.isRunning) {
+          runBellmanFordStep();
+        }
+        return prev;
+      });
+    }, getAnimationDelay());
   };
 
   return (
@@ -1267,6 +1393,54 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {(bellmanFordAnimationState.isRunning || bellmanFordAnimationState.visitedNodes.size > 0) && (
+            <div className="bellman-ford-status-container">
+              <h3>Bellman-Ford Status</h3>
+              <div className="bellman-ford-status">
+                <div className="current-state">
+                  <strong>Iteration:</strong> {bellmanFordAnimationState.iteration + 1}/{nodes.length}
+                </div>
+                
+                <div className="distances-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Node</th>
+                        <th>Distance</th>
+                        <th>Predecessor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nodes.sort((a, b) => a.id - b.id).map(node => (
+                        <tr key={node.id}>
+                          <td>{node.id}</td>
+                          <td>
+                            {bellmanFordAnimationState.distances[node.uniqueId] === Infinity 
+                              ? '∞' 
+                              : bellmanFordAnimationState.distances[node.uniqueId]}
+                          </td>
+                          <td>
+                            {bellmanFordAnimationState.predecessors[node.uniqueId] 
+                              ? nodes.find(n => n.uniqueId === bellmanFordAnimationState.predecessors[node.uniqueId])?.id 
+                              : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0 && (
+                  <div className={`algorithm-result ${bellmanFordAnimationState.hasNegativeCycle ? 'invalid' : 'valid'}`}>
+                    {bellmanFordAnimationState.hasNegativeCycle 
+                      ? "Negative Cycle Detected!"
+                      : "Shortest paths found successfully"}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -1361,6 +1535,37 @@ export default function GraphEditor() {
               </button>
             </div>
           </div>
+
+          <div className="algorithm-section">
+            <h3>Bellman Ford</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  setMode('bellmanFord');
+                  alert('Click a node to start Bellman Ford');
+                }}
+                disabled={bellmanFordAnimationState.isRunning}
+              >
+                Start Bellman Ford
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseBellmanFord}
+                disabled={!bellmanFordAnimationState.isRunning}
+              >
+                {bellmanFordAnimationState.isPaused ? 'Resume' : 'Pause'} Bellman Ford
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetBellmanFord}
+                disabled={!bellmanFordAnimationState.isRunning && !bellmanFordAnimationState.visitedNodes.size}
+              >
+                Reset Bellman Ford
+              </button>
+            </div>
+          </div>                
+
         </div>
       </div>
     </div>

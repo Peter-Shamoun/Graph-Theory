@@ -676,3 +676,47 @@ body {
   display: inline-flex;
   align-items: center;
 }
+
+.bellman-ford-status-container {
+  width: 100%;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.distances-table {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.distances-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.distances-table th,
+.distances-table td {
+  padding: 0.75rem;
+  text-align: center;
+  border: 1px solid var(--secondary);
+}
+
+.algorithm-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.algorithm-result.valid {
+  background-color: #86efac;
+  color: #14532d;
+}
+
+.algorithm-result.invalid {
+  background-color: #fca5a5;
+  color: #7f1d1d;
+}
