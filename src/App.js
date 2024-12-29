@@ -31,6 +31,8 @@ export default function GraphEditor() {
     queue: [],
     currentNode: null,
     sourceNode: null,
+    predecessors: {},
+    distances: {},
   });
   const [animationSpeed, setAnimationSpeed] = useState(50); // Default 50%
 
@@ -403,7 +405,9 @@ export default function GraphEditor() {
       visitedEdges: new Set(),
       queue: [sourceNode.uniqueId],
       currentNode: sourceNode.uniqueId,
-      sourceNode: sourceNode.uniqueId
+      sourceNode: sourceNode.uniqueId,
+      predecessors: { [sourceNode.uniqueId]: null },
+      distances: { [sourceNode.uniqueId]: 0 },
     }));
 
     runBFSStep();
@@ -431,6 +435,14 @@ export default function GraphEditor() {
         .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
         .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
 
+      // Update predecessors and distances for newly discovered nodes
+      const newPredecessors = { ...prev.predecessors };
+      const newDistances = { ...prev.distances };
+      neighbors.forEach(neighborId => {
+        newPredecessors[neighborId] = currentNode;
+        newDistances[neighborId] = prev.distances[currentNode] + 1;
+      });
+
       // Add edges to visited edges
       const newVisitedEdges = new Set(prev.visitedEdges);
       neighbors.forEach(neighborId => {
@@ -446,11 +458,12 @@ export default function GraphEditor() {
         queue: [...newQueue, ...neighbors],
         visitedNodes: new Set([...prev.visitedNodes, ...neighbors]),
         visitedEdges: newVisitedEdges,
-        currentNode: currentNode // Always set current node to the one being processed
+        currentNode: currentNode,
+        predecessors: newPredecessors,
+        distances: newDistances,
       };
     });
 
-    // Continue animation after a delay
     setTimeout(() => {
       setBfsAnimationState(prev => {
         if (prev.queue.length > 0 && !prev.isPaused) {
@@ -481,7 +494,9 @@ export default function GraphEditor() {
       visitedEdges: new Set(),
       queue: [],
       currentNode: null,
-      sourceNode: null
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
     });
   };
 
@@ -745,6 +760,30 @@ export default function GraphEditor() {
                     {bfsAnimationState.queue.map((nodeId, index) => (
                       <div key={index} className="queue-item">
                         Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="dictionary-section">
+                  <strong>Predecessors:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(bfsAnimationState.predecessors).map(([nodeId, predId]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {
+                          predId ? `Node ${nodes.find(n => n.uniqueId === predId)?.id}` : 'None'
+                        }
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dictionary-section">
+                  <strong>Distances:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(bfsAnimationState.distances).map(([nodeId, distance]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance}
                       </div>
                     ))}
                   </div>
