@@ -182,6 +182,12 @@ export default function GraphEditor() {
           (e) => e.source !== uniqueId && e.target !== uniqueId
         )
       );
+    } else if (mode === 'bfs') {
+      startBFS(nodeId);
+    } else if (mode === 'dfs') {
+      startDFS(nodeId);
+    } else if (mode === 'timed_dfs') {
+      startTimedDFS(nodeId);
     }
   };
 
@@ -699,6 +705,7 @@ export default function GraphEditor() {
   const getCurrentStateText = () => {
     if (bfsAnimationState.isRunning) return 'Running BFS';
     if (dfsAnimationState.isRunning) return 'Running DFS';
+    if (timedDfsAnimationState.isRunning) return 'Running Timed DFS';
     
     switch (mode) {
       case 'add_node':
@@ -715,6 +722,8 @@ export default function GraphEditor() {
         return 'Select Node for BFS';
       case 'dfs':
         return 'Select Node for DFS';
+      case 'timed_dfs':
+        return 'Select Node for Timed DFS';
       default:
         return mode;
     }
