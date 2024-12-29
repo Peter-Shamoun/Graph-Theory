@@ -488,3 +488,58 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Queue and Stack visualizations */
+.queue-visualization,
+.stack-visualization {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.queue-item,
+.stack-item {
+  padding: 0.5rem 1rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Dictionary sections */
+.dictionary-section {
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.dictionary-visualization {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.dictionary-item {
+  padding: 0.5rem;
+  background: var(--surface);
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Current node section */
+.current-node {
+  padding: 0.5rem 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+}
+
+/* Stack/Queue section headers */
+.stack-section,
+.queue-section {
+  background: var(--background);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
