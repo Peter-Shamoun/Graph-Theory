@@ -42,13 +42,33 @@ body {
 
 .graph-editor__controls {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 2rem;
   padding: 1rem;
   background: var(--surface);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.left-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.right-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 .radio-group {
@@ -281,6 +301,8 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
+  max-width: 400px;
 }
 
 .speed-slider input[type="range"] {

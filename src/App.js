@@ -32,7 +32,7 @@ export default function GraphEditor() {
     currentNode: null,
     sourceNode: null,
   });
-  const [animationSpeed, setAnimationSpeed] = useState(1000); // Default 1000ms (1 second)
+  const [animationSpeed, setAnimationSpeed] = useState(50); // Default 50%
 
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
@@ -412,7 +412,7 @@ export default function GraphEditor() {
   const getAnimationDelay = () => {
     // Convert slider value (1-100) to delay (1500ms - 100ms)
     // Reversed so that higher slider value = faster animation
-    return 1600 - (animationSpeed * 15);
+    return 3200 - (animationSpeed * 15);
   };
 
   const runBFSStep = async () => {
@@ -492,68 +492,90 @@ export default function GraphEditor() {
       </header>
 
       <div className="graph-editor__controls">
-        {/* Graph Type Selection */}
-        <div className="radio-group">
-          <label className="radio-label">
-            <input
-              type="radio"
-              value="weighted"
-              checked={isWeighted}
-              onChange={() => setIsWeighted(true)}
-            /> 
-            Weighted
-          </label>
-          <label className="radio-label">
-            <input
-              type="radio"
-              value="unweighted"
-              checked={!isWeighted}
-              onChange={() => setIsWeighted(false)}
-            /> 
-            Unweighted
-          </label>
-          <label className="radio-label" style={{ 
-            opacity: nodes.length > 0 ? 0.5 : 1,
-            cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
-          }}>
-            <input
-              type="radio"
-              value="directed"
-              checked={isDirected}
-              onChange={() => handleDirectedToggle(true)}
-              disabled={nodes.length > 0}
-            /> 
-            Directed
-          </label>
-          <label className="radio-label" style={{ 
-            opacity: nodes.length > 0 ? 0.5 : 1,
-            cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
-          }}>
-            <input
-              type="radio"
-              value="undirected"
-              checked={!isDirected}
-              onChange={() => handleDirectedToggle(false)}
-              disabled={nodes.length > 0}
-            /> 
-            Undirected
-          </label>
+        <div className="left-controls">
+          {/* Graph Type and Speed Controls */}
+          <div className="control-group">
+            <div className="radio-group">
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  value="weighted"
+                  checked={isWeighted}
+                  onChange={() => setIsWeighted(true)}
+                /> 
+                Weighted
+              </label>
+              <label className="radio-label">
+                <input
+                  type="radio"
+                  value="unweighted"
+                  checked={!isWeighted}
+                  onChange={() => setIsWeighted(false)}
+                /> 
+                Unweighted
+              </label>
+              <label className="radio-label" style={{ 
+                opacity: nodes.length > 0 ? 0.5 : 1,
+                cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+              }}>
+                <input
+                  type="radio"
+                  value="directed"
+                  checked={isDirected}
+                  onChange={() => handleDirectedToggle(true)}
+                  disabled={nodes.length > 0}
+                /> 
+                Directed
+              </label>
+              <label className="radio-label" style={{ 
+                opacity: nodes.length > 0 ? 0.5 : 1,
+                cursor: nodes.length > 0 ? 'not-allowed' : 'pointer'
+              }}>
+                <input
+                  type="radio"
+                  value="undirected"
+                  checked={!isDirected}
+                  onChange={() => handleDirectedToggle(false)}
+                  disabled={nodes.length > 0}
+                /> 
+                Undirected
+              </label>
+            </div>
+
+            <div className="speed-slider">
+              <label htmlFor="speed-control">Animation Speed:</label>
+              <input
+                id="speed-control"
+                type="range"
+                min="1"
+                max="100"
+                value={animationSpeed}
+                onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
+                disabled={bfsAnimationState.isRunning && !bfsAnimationState.isPaused}
+              />
+              <span>{animationSpeed}%</span>
+            </div>
+          </div>
+
+          {/* Main Graph Controls */}
+          <div className="button-group">
+            <button className="btn btn-primary" onClick={setModeAddNode}>Add Node</button>
+            <button className="btn btn-primary" onClick={setModeAddEdge}>Add Edge</button>
+            <button className="btn btn-secondary" onClick={setModeDelete}>Delete</button>
+            <button className="btn btn-secondary" onClick={setModeRenameEdge}>Change Edge Weight</button>
+            <button 
+              className={`btn ${mode === 'drag' ? 'btn-primary' : 'btn-secondary'}`} 
+              onClick={setModeDrag}
+            >
+              Drag Mode
+            </button>
+            <button className="btn btn-secondary" onClick={resetNodeCounter}>Reset Counter</button>
+            <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
+          </div>
         </div>
 
-        {/* Toolbar */}
-        <div className="button-group">
-          <button className="btn btn-primary" onClick={setModeAddNode}>Add Node</button>
-          <button className="btn btn-primary" onClick={setModeAddEdge}>Add Edge</button>
-          <button className="btn btn-secondary" onClick={setModeDelete}>Delete</button>
-          <button className="btn btn-secondary" onClick={setModeRenameEdge}>Change Edge Weight</button>
-          <button 
-            className={`btn ${mode === 'drag' ? 'btn-primary' : 'btn-secondary'}`} 
-            onClick={setModeDrag}
-          >
-            Drag Mode
-          </button>
-          <button className="btn btn-secondary" onClick={resetNodeCounter}>Reset Counter</button>
-          <button className="btn btn-danger" onClick={deleteAll}>Delete All</button>
+        {/* Algorithm Controls */}
+        <div className="right-controls">
           <button 
             className="btn btn-primary"
             onClick={() => {
@@ -578,9 +600,6 @@ export default function GraphEditor() {
           >
             Reset BFS
           </button>
-          <span style={{ marginLeft: '1rem', alignSelf: 'center' }}>
-            Current Mode: <strong>{mode}</strong>
-          </span>
         </div>
       </div>
 
