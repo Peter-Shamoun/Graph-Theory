@@ -922,6 +922,55 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {(dfsAnimationState.isRunning || dfsAnimationState.visitedNodes.size > 0) && (
+            <div className="dfs-status-container">
+              <h3>DFS Status</h3>
+              <div className="dfs-status">
+                <div className="current-node">
+                  <strong>Current Node:</strong> {
+                    dfsAnimationState.currentNode ? 
+                    ` Node ${nodes.find(n => n.uniqueId === dfsAnimationState.currentNode)?.id}` : 
+                    ' None'
+                  }
+                </div>
+                <div className="stack-section">
+                  <strong>Stack:</strong>
+                  <div className="stack-visualization">
+                    {dfsAnimationState.stack.map((nodeId, index) => (
+                      <div key={index} className="stack-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="dictionary-section">
+                  <strong>Predecessors:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(dfsAnimationState.predecessors).map(([nodeId, predId]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {
+                          predId ? `Node ${nodes.find(n => n.uniqueId === predId)?.id}` : 'None'
+                        }
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dictionary-section">
+                  <strong>Distances:</strong>
+                  <div className="dictionary-visualization">
+                    {Object.entries(dfsAnimationState.distances).map(([nodeId, distance]) => (
+                      <div key={nodeId} className="dictionary-item">
+                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance === Infinity ? '∞' : distance}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -986,55 +1035,6 @@ export default function GraphEditor() {
               </button>
             </div>
           </div>
-
-          {(dfsAnimationState.isRunning || dfsAnimationState.visitedNodes.size > 0) && (
-            <div className="dfs-status-container">
-              <h3>DFS Status</h3>
-              <div className="dfs-status">
-                <div className="current-node">
-                  <strong>Current Node:</strong> {
-                    dfsAnimationState.currentNode ? 
-                    ` Node ${nodes.find(n => n.uniqueId === dfsAnimationState.currentNode)?.id}` : 
-                    ' None'
-                  }
-                </div>
-                <div className="stack-section">
-                  <strong>Stack:</strong>
-                  <div className="stack-visualization">
-                    {dfsAnimationState.stack.map((nodeId, index) => (
-                      <div key={index} className="stack-item">
-                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="dictionary-section">
-                  <strong>Predecessors:</strong>
-                  <div className="dictionary-visualization">
-                    {Object.entries(dfsAnimationState.predecessors).map(([nodeId, predId]) => (
-                      <div key={nodeId} className="dictionary-item">
-                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {
-                          predId ? `Node ${nodes.find(n => n.uniqueId === predId)?.id}` : 'None'
-                        }
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="dictionary-section">
-                  <strong>Distances:</strong>
-                  <div className="dictionary-visualization">
-                    {Object.entries(dfsAnimationState.distances).map(([nodeId, distance]) => (
-                      <div key={nodeId} className="dictionary-item">
-                        Node {nodes.find(n => n.uniqueId === nodeId)?.id}: {distance === Infinity ? '∞' : distance}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
