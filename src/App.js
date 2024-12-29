@@ -762,7 +762,9 @@ export default function GraphEditor() {
       distances: initialDistances,
       startTimes: { [sourceNode.uniqueId]: 1 },
       finishTimes: {},
-      time: 1
+      time: 1,
+      hasBackEdge: false,
+      remainingNodes: new Set(nodes.map(n => n.uniqueId).filter(id => id !== sourceNode.uniqueId))
     }));
 
     runTimedDFSStep();
@@ -770,8 +772,28 @@ export default function GraphEditor() {
 
   const runTimedDFSStep = async () => {
     setTimedDfsAnimationState(prev => {
-      if (prev.stack.length === 0 || prev.isPaused) {
+      if (prev.isPaused) {
         return prev;
+      }
+
+      // If stack is empty but there are unvisited nodes, start new DFS from an unvisited node
+      if (prev.stack.length === 0 && prev.remainingNodes.size > 0) {
+        const nextStartNode = Array.from(prev.remainingNodes)[0];
+        const newTime = prev.time + 1;
+        
+        return {
+          ...prev,
+          stack: [nextStartNode],
+          visitedNodes: new Set([...prev.visitedNodes, nextStartNode]),
+          currentNode: nextStartNode,
+          startTimes: { ...prev.startTimes, [nextStartNode]: newTime },
+          time: newTime,
+          remainingNodes: new Set(Array.from(prev.remainingNodes).filter(id => id !== nextStartNode))
+        };
+      }
+
+      if (prev.stack.length === 0) {
+        return { ...prev, isRunning: false };
       }
 
       const currentNode = prev.stack[prev.stack.length - 1];
@@ -785,7 +807,7 @@ export default function GraphEditor() {
 
       // Check for back edges
       let foundBackEdge = prev.hasBackEdge;
-      if (isDirected) {  // Only check for back edges in directed graphs
+      if (isDirected) {
         allNeighbors.forEach(neighborId => {
           if (prev.visitedNodes.has(neighborId) && 
               prev.stack.includes(neighborId) && 
@@ -795,42 +817,24 @@ export default function GraphEditor() {
         });
       }
 
-      // Get unvisited neighbors (original logic)
+      // Get unvisited neighbors
       const neighbors = allNeighbors.filter(nodeId => !prev.visitedNodes.has(nodeId));
 
       if (neighbors.length > 0) {
-        // Visit the first unvisited neighbor
         const nextNode = neighbors[0];
         const newTime = prev.time + 1;
         
-        // Update predecessors and distances
-        const newPredecessors = { ...prev.predecessors };
-        const newDistances = { ...prev.distances };
-        newPredecessors[nextNode] = currentNode;
-        newDistances[nextNode] = prev.distances[currentNode] + 1;
-
-        // Add edge to visited edges
-        const newVisitedEdges = new Set(prev.visitedEdges);
-        const edge = edges.find(e => 
-          (e.source === currentNode && e.target === nextNode) ||
-          (!isDirected && e.target === currentNode && e.source === nextNode)
-        );
-        if (edge) newVisitedEdges.add(edge.id);
-
         return {
           ...prev,
           stack: [...prev.stack, nextNode],
           visitedNodes: new Set([...prev.visitedNodes, nextNode]),
-          visitedEdges: newVisitedEdges,
           currentNode: nextNode,
-          predecessors: newPredecessors,
-          distances: newDistances,
           startTimes: { ...prev.startTimes, [nextNode]: newTime },
           time: newTime,
-          hasBackEdge: foundBackEdge
+          hasBackEdge: foundBackEdge,
+          remainingNodes: new Set(Array.from(prev.remainingNodes).filter(id => id !== nextNode))
         };
       } else {
-        // No unvisited neighbors, finish current node
         const newStack = prev.stack.slice(0, -1);
         const newTime = prev.time + 1;
         
@@ -847,9 +851,9 @@ export default function GraphEditor() {
 
     setTimeout(() => {
       setTimedDfsAnimationState(prev => {
-        if (prev.stack.length > 0 && !prev.isPaused) {
+        if (!prev.isPaused && (prev.stack.length > 0 || prev.remainingNodes.size > 0)) {
           runTimedDFSStep();
-        } else if (prev.stack.length === 0) {
+        } else if (prev.stack.length === 0 && prev.remainingNodes.size === 0) {
           return { ...prev, isRunning: false };
         }
         return prev;
@@ -881,7 +885,8 @@ export default function GraphEditor() {
       startTimes: {},
       finishTimes: {},
       time: 0,
-      hasBackEdge: false
+      hasBackEdge: false,
+      remainingNodes: new Set()
     });
   };
 
