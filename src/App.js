@@ -709,7 +709,7 @@ export default function GraphEditor() {
             </div>
           </div>
 
-          {bfsAnimationState.isRunning && (
+          {(bfsAnimationState.isRunning || bfsAnimationState.visitedNodes.size > 0) && (
             <div className="bfs-status-container">
               <h3>BFS Status</h3>
               <div className="bfs-status">
