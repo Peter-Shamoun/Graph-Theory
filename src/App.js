@@ -1196,7 +1196,7 @@ export default function GraphEditor() {
 
           {(timedDfsAnimationState.isRunning || timedDfsAnimationState.visitedNodes.size > 0) && (
             <div className="timed-dfs-status-container">
-              <h3>Timed DFS Status</h3>
+              <h3>Timed Topological Sort (DFS) Status</h3>
               <div className="dfs-status">
                 <div className="current-node">
                   <strong>Current Node:</strong> {
@@ -1333,7 +1333,7 @@ export default function GraphEditor() {
           </div>
 
           <div className="algorithm-section">
-            <h3>Timed Depth-First Search</h3>
+            <h3>Topological Sort (DFS)</h3>
             <div className="algorithm-controls">
               <button 
                 className="btn btn-primary"
@@ -1343,7 +1343,7 @@ export default function GraphEditor() {
                 }}
                 disabled={timedDfsAnimationState.isRunning}
               >
-                Start Timed DFS
+                Start Topological Sort (DFS)
               </button>
               <button
                 className="btn btn-secondary"
@@ -1357,7 +1357,7 @@ export default function GraphEditor() {
                 onClick={resetTimedDFS}
                 disabled={!timedDfsAnimationState.isRunning && !timedDfsAnimationState.visitedNodes.size}
               >
-                Reset Timed DFS
+                Reset Topological Sort (DFS)
               </button>
             </div>
           </div>
