@@ -733,13 +733,25 @@ export default function GraphEditor() {
 
       {bfsAnimationState.isRunning && (
         <div className="bfs-queue">
-          <h3>BFS Queue</h3>
-          <div className="queue-visualization">
-            {bfsAnimationState.queue.map((nodeId, index) => (
-              <div key={index} className="queue-item">
-                Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+          <h3>BFS Status</h3>
+          <div className="bfs-status">
+            <div className="current-node">
+              <strong>Current Node:</strong> {
+                bfsAnimationState.currentNode ? 
+                ` Node ${nodes.find(n => n.uniqueId === bfsAnimationState.currentNode)?.id}` : 
+                ' None'
+              }
+            </div>
+            <div className="queue-section">
+              <strong>Queue:</strong>
+              <div className="queue-visualization">
+                {bfsAnimationState.queue.map((nodeId, index) => (
+                  <div key={index} className="queue-item">
+                    Node {nodes.find(n => n.uniqueId === nodeId)?.id}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       )}

@@ -384,3 +384,21 @@ body {
 .algorithm-controls .btn {
   width: 100%;
 }
+
+.bfs-status {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.current-node {
+  padding: 0.5rem;
+  background: var(--background);
+  border-radius: 0.25rem;
+}
+
+.queue-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
