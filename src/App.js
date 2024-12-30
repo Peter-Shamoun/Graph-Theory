@@ -1336,12 +1336,12 @@ export default function GraphEditor() {
                       sourceNode.y, 
                       targetNode.x, 
                       targetNode.y,
-                      offset
+                      oppositeEdge ? 20 : 0
                     )}
                     stroke="black"
                     strokeWidth="2"
                     fill="none"
-                    markerEnd={isDirected ? "url(#arrowhead)" : undefined}
+                    markerEnd={isDirected ? "url(#arrowhead)" : "none"}
                     style={{ 
                       strokeLinecap: "round",
                       strokeLinejoin: "round"
@@ -1350,7 +1350,7 @@ export default function GraphEditor() {
                   {isWeighted && (
                     <text 
                       x={labelX} 
-                      y={labelY} 
+                      y={labelY}  
                       dy="-5"
                       textAnchor="middle"
                       alignmentBaseline="middle"
