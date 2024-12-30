@@ -993,14 +993,12 @@ export default function GraphEditor() {
     
     initialDistances[sourceNode.uniqueId] = 0;
 
-    // Create edge sequence for visualization - randomize edge order for each iteration
+    // Create edge sequence for visualization - use same edge order for each iteration
     const edgeSequence = [];
     const maxIterations = nodes.length - 1;
     
     for (let i = 0; i < maxIterations; i++) {
-      // Shuffle edges for this iteration
-      const shuffledEdges = [...edges].sort(() => Math.random() - 0.5);
-      shuffledEdges.forEach(edge => {
+      edges.forEach(edge => {
         edgeSequence.push({
           ...edge,
           iteration: i + 1
@@ -1177,11 +1175,10 @@ export default function GraphEditor() {
         </div>
         
         <div className="edge-sequence-section">
-          <strong>Random Edge Order for Current Iteration:</strong>
+          <strong>Fixed Edge Order (used for each iteration):</strong>
           <div className="edge-sequence-visualization">
             {edges
-              .slice()
-              .sort(() => Math.random() - 0.5)
+              .slice(0, edges.length) // Take only one iteration worth of edges
               .map((edge, index) => (
                 <div key={index} className="edge-item">
                   (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
@@ -1193,7 +1190,7 @@ export default function GraphEditor() {
         </div>
 
         <div className="edge-sequence-section">
-          <strong>Edge Processing Sequence:</strong>
+          <strong>Current Progress:</strong>
           <div className="edge-sequence-visualization">
             {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
               <div 
@@ -1658,6 +1655,36 @@ export default function GraphEditor() {
                   <strong>Iterations completed:</strong> {bellmanFordAnimationState.iterationCount || 0}
                 </div>
                 
+                <div className="edge-sequence-section">
+                  <strong>Fixed Edge Order (used for each iteration):</strong>
+                  <div className="edge-sequence-visualization">
+                    {edges
+                      .slice(0, edges.length) // Take only one iteration worth of edges
+                      .map((edge, index) => (
+                        <div key={index} className="edge-item">
+                          (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
+                           v{nodes.find(n => n.uniqueId === edge.target)?.id})
+                          {index < edges.length - 1 && ', '}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="edge-sequence-section">
+                  <strong>Current Progress:</strong>
+                  <div className="edge-sequence-visualization">
+                    {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
+                      <div 
+                        key={index} 
+                        className={`edge-item ${index === bellmanFordAnimationState.currentStep ? 'current' : ''}`}
+                      >
+                        (v{edge.from}, v{edge.to})
+                        {index < bellmanFordAnimationState.edgeSequenceDisplay.length - 1 && ', '}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="distances-table">
                   <table>
                     <thead>
