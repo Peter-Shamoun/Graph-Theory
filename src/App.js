@@ -724,15 +724,41 @@ export default function GraphEditor() {
 
   // Update node rendering to include DFS highlighting
   const getNodeFill = (node) => {
-    if (bellmanFordAnimationState.currentEdge) {
-      const currentEdge = edges.find(e => e.id === bellmanFordAnimationState.currentEdge);
-      if (currentEdge && (currentEdge.source === node.uniqueId || currentEdge.target === node.uniqueId)) {
-        return "#ff8c00";
+    if (bellmanFordAnimationState.isRunning) {
+      // Source node is always gold
+      if (bellmanFordAnimationState.sourceNode === node.uniqueId) {
+        return "#FFD700";
+      }
+      
+      // If we're currently processing an edge
+      if (bellmanFordAnimationState.currentEdge) {
+        const currentEdge = edges.find(e => e.id === bellmanFordAnimationState.currentEdge);
+        if (currentEdge) {
+          // Source node of current edge being processed
+          if (currentEdge.source === node.uniqueId) {
+            return "#ff8c00"; // Orange
+          }
+          // Target node of current edge being processed
+          if (currentEdge.target === node.uniqueId) {
+            // If this relaxation step will update the distance
+            const sourceDistance = bellmanFordAnimationState.distances[currentEdge.source];
+            const targetDistance = bellmanFordAnimationState.distances[currentEdge.target];
+            const newDistance = sourceDistance + currentEdge.weight;
+            if (newDistance < targetDistance) {
+              return "#90EE90"; // Light green for successful relaxation
+            }
+            return "#ff8c00"; // Orange for attempted relaxation
+          }
+        }
+      }
+      
+      // Nodes that have been updated (have finite distance)
+      if (bellmanFordAnimationState.distances[node.uniqueId] !== Infinity) {
+        return "#98FB98"; // Pale green
       }
     }
-    if (bellmanFordAnimationState.sourceNode === node.uniqueId) {
-      return "#FFD700";
-    }
+
+    // Other algorithm states remain the same
     if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
     if (dfsAnimationState.currentNode === node.uniqueId || 
         timedDfsAnimationState.currentNode === node.uniqueId) return "#ff4500";
@@ -1015,16 +1041,15 @@ export default function GraphEditor() {
       
       // Check if we've completed current iteration
       if (prev.currentStep % edges.length === 0 && prev.currentStep > 0) {
-        // If no changes in this iteration, we can stop early
         if (!prev.anyChanges) {
           return {
             ...prev,
             isRunning: false,
             hasNegativeCycle: false,
-            iterationCount: Math.floor(prev.currentStep / edges.length) // Add final iteration count
+            currentEdge: null, // Clear current edge
+            iterationCount: Math.floor(prev.currentStep / edges.length)
           };
         }
-        // Reset anyChanges for next iteration
         prev.anyChanges = false;
       }
 
@@ -1034,7 +1059,8 @@ export default function GraphEditor() {
           ...prev,
           isRunning: false,
           hasNegativeCycle: prev.anyChanges,
-          iterationCount: n // Maximum possible iterations reached
+          currentEdge: null, // Clear current edge
+          iterationCount: n
         };
       }
 
@@ -1043,10 +1069,12 @@ export default function GraphEditor() {
       const edge = prev.edgeOrder[edgeIndex];
       const { source, target, weight } = edge;
 
+      // Calculate new distance before updating state
+      const newDistance = prev.distances[source] + weight;
+      
       // Perform relaxation
       const newDistances = { ...prev.distances };
       const newPredecessors = { ...prev.predecessors };
-      const newDistance = prev.distances[source] + weight;
 
       let changed = false;
       if (newDistance < prev.distances[target]) {
@@ -1055,34 +1083,31 @@ export default function GraphEditor() {
         changed = true;
       }
 
-      // Update state
-      const newVisitedEdges = new Set(prev.visitedEdges);
-      newVisitedEdges.add(edge.id);
-
       const nextStep = prev.currentStep + 1;
       const nextIteration = Math.floor(nextStep / prev.edgeOrder.length) + 1;
 
       return {
         ...prev,
-        visitedEdges: newVisitedEdges,
         currentEdge: edge.id,
         currentStep: nextStep,
         iteration: nextIteration,
         distances: newDistances,
         predecessors: newPredecessors,
         anyChanges: prev.anyChanges || changed,
-        iterationCount: Math.floor(nextStep / edges.length) // Update iteration count
+        iterationCount: Math.floor(nextStep / edges.length)
       };
     });
 
-    setTimeout(() => {
-      setBellmanFordAnimationState(prev => {
-        if (!prev.isPaused && prev.isRunning) {
-          runBellmanFordStep();
-        }
-        return prev;
-      });
-    }, getAnimationDelay());
+    // Add a small delay to make the animation more visible
+    await new Promise(resolve => setTimeout(resolve, getAnimationDelay()));
+
+    // Continue if still running
+    setBellmanFordAnimationState(prev => {
+      if (!prev.isPaused && prev.isRunning) {
+        runBellmanFordStep();
+      }
+      return prev;
+    });
   };
 
   const togglePauseBellmanFord = () => {
