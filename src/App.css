@@ -747,3 +747,13 @@ body {
   background: var(--surface);
   border-radius: 0.5rem;
 }
+
+/* Add marker styles */
+#arrowhead {
+  stroke: none;
+  fill: black;
+}
+
+.edge text {
+  pointer-events: none;  /* Prevent text from interfering with edge clicks */
+}

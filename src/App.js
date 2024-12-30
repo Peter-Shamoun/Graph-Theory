@@ -255,6 +255,10 @@ export default function GraphEditor() {
       return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
     }
 
+    // Calculate the midpoint
+    const mpX = (sourceX + targetX) / 2;
+    const mpY = (sourceY + targetY) / 2;
+
     // Calculate the perpendicular offset
     const dx = targetX - sourceX;
     const dy = targetY - sourceY;
@@ -263,11 +267,9 @@ export default function GraphEditor() {
     const offsetX = -dy * offset / length;
     const offsetY = dx * offset / length;
 
-    // Return a straight line with offset
+    // Return a quadratic curve with offset control point
     return `M ${sourceX} ${sourceY} 
-            L ${sourceX + offsetX} ${sourceY + offsetY} 
-            L ${targetX + offsetX} ${targetY + offsetY} 
-            L ${targetX} ${targetY}`;
+            Q ${mpX + offsetX} ${mpY + offsetY} ${targetX} ${targetY}`;
   };
 
   const handleEdgeClick = (edge, e) => {
@@ -1292,10 +1294,10 @@ export default function GraphEditor() {
               <marker
                 id="arrowhead"
                 viewBox="0 0 10 10"
-                refX="21"
+                refX="8"
                 refY="5"
-                markerWidth="8"
-                markerHeight="8"
+                markerWidth="6"
+                markerHeight="6"
                 orient="auto-start-reverse"
               >
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
@@ -1314,7 +1316,7 @@ export default function GraphEditor() {
               );
 
               // Apply offset if there's a bidirectional connection
-              const offset = oppositeEdge ? 15 : 0;
+              const offset = oppositeEdge ? 20 : 0;
               
               const [labelX, labelY] = getMidpoint(
                 sourceNode.x, 
@@ -1340,9 +1342,19 @@ export default function GraphEditor() {
                     strokeWidth="2"
                     fill="none"
                     markerEnd={isDirected ? "url(#arrowhead)" : undefined}
+                    style={{ 
+                      strokeLinecap: "round",
+                      strokeLinejoin: "round"
+                    }}
                   />
                   {isWeighted && (
-                    <text x={labelX} y={labelY} dy="-5">
+                    <text 
+                      x={labelX} 
+                      y={labelY} 
+                      dy="-5"
+                      textAnchor="middle"
+                      alignmentBaseline="middle"
+                    >
                       {edge.weight}
                     </text>
                   )}
