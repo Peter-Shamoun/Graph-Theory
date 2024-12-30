@@ -1016,11 +1016,12 @@ export default function GraphEditor() {
       // Check if we've completed current iteration
       if (prev.currentStep % edges.length === 0 && prev.currentStep > 0) {
         // If no changes in this iteration, we can stop early
-        if (!prev.anyChanges && prev.iteration < n) {
+        if (!prev.anyChanges) {
           return {
             ...prev,
             isRunning: false,
-            hasNegativeCycle: false
+            hasNegativeCycle: false,
+            iterationCount: Math.floor(prev.currentStep / edges.length) // Add final iteration count
           };
         }
         // Reset anyChanges for next iteration
@@ -1032,7 +1033,8 @@ export default function GraphEditor() {
         return {
           ...prev,
           isRunning: false,
-          hasNegativeCycle: prev.anyChanges // If changes in last iteration, negative cycle exists
+          hasNegativeCycle: prev.anyChanges,
+          iterationCount: n // Maximum possible iterations reached
         };
       }
 
@@ -1068,7 +1070,8 @@ export default function GraphEditor() {
         iteration: nextIteration,
         distances: newDistances,
         predecessors: newPredecessors,
-        anyChanges: prev.anyChanges || changed
+        anyChanges: prev.anyChanges || changed,
+        iterationCount: Math.floor(nextStep / edges.length) // Update iteration count
       };
     });
 
@@ -1145,7 +1148,7 @@ export default function GraphEditor() {
       <h3>Bellman-Ford Status</h3>
       <div className="bellman-ford-status">
         <div className="current-state">
-          <strong>Iteration:</strong> {bellmanFordAnimationState.iteration}/{nodes.length - 1}
+          <strong>Iterations completed:</strong> {bellmanFordAnimationState.iterationCount || 0}
         </div>
         
         <div className="edge-sequence-section">
@@ -1627,7 +1630,7 @@ export default function GraphEditor() {
               <h3>Bellman-Ford Status</h3>
               <div className="bellman-ford-status">
                 <div className="current-state">
-                  <strong>Iteration:</strong> {bellmanFordAnimationState.iteration}/{nodes.length - 1}
+                  <strong>Iterations completed:</strong> {bellmanFordAnimationState.iterationCount || 0}
                 </div>
                 
                 <div className="distances-table">
