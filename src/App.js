@@ -1175,30 +1175,16 @@ export default function GraphEditor() {
         </div>
         
         <div className="edge-sequence-section">
-          <strong>Fixed Edge Order (used for each iteration):</strong>
+          <strong>Edge Processing Order:</strong>
           <div className="edge-sequence-visualization">
-            {edges
-              .slice(0, edges.length) // Take only one iteration worth of edges
-              .map((edge, index) => (
-                <div key={index} className="edge-item">
-                  (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
-                   v{nodes.find(n => n.uniqueId === edge.target)?.id})
-                  {index < edges.length - 1 && ', '}
-                </div>
-              ))}
-          </div>
-        </div>
-
-        <div className="edge-sequence-section">
-          <strong>Current Progress:</strong>
-          <div className="edge-sequence-visualization">
-            {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
+            {edges.map((edge, index) => (
               <div 
                 key={index} 
-                className={`edge-item ${index === bellmanFordAnimationState.currentStep ? 'current' : ''}`}
+                className={`edge-item ${edge.id === bellmanFordAnimationState.currentEdge ? 'current' : ''}`}
               >
-                (v{edge.from}, v{edge.to})
-                {index < bellmanFordAnimationState.edgeSequenceDisplay.length - 1 && ', '}
+                (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
+                 v{nodes.find(n => n.uniqueId === edge.target)?.id})
+                {index < edges.length - 1 && ', '}
               </div>
             ))}
           </div>
@@ -1656,30 +1642,16 @@ export default function GraphEditor() {
                 </div>
                 
                 <div className="edge-sequence-section">
-                  <strong>Fixed Edge Order (used for each iteration):</strong>
+                  <strong>Edge Processing Order:</strong>
                   <div className="edge-sequence-visualization">
-                    {edges
-                      .slice(0, edges.length) // Take only one iteration worth of edges
-                      .map((edge, index) => (
-                        <div key={index} className="edge-item">
-                          (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
-                           v{nodes.find(n => n.uniqueId === edge.target)?.id})
-                          {index < edges.length - 1 && ', '}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                <div className="edge-sequence-section">
-                  <strong>Current Progress:</strong>
-                  <div className="edge-sequence-visualization">
-                    {bellmanFordAnimationState.edgeSequenceDisplay?.map((edge, index) => (
+                    {edges.map((edge, index) => (
                       <div 
                         key={index} 
-                        className={`edge-item ${index === bellmanFordAnimationState.currentStep ? 'current' : ''}`}
+                        className={`edge-item ${edge.id === bellmanFordAnimationState.currentEdge ? 'current' : ''}`}
                       >
-                        (v{edge.from}, v{edge.to})
-                        {index < bellmanFordAnimationState.edgeSequenceDisplay.length - 1 && ', '}
+                        (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
+                         v{nodes.find(n => n.uniqueId === edge.target)?.id})
+                        {index < edges.length - 1 && ', '}
                       </div>
                     ))}
                   </div>
@@ -1697,7 +1669,7 @@ export default function GraphEditor() {
                     <tbody>
                       {nodes.sort((a, b) => a.id - b.id).map(node => (
                         <tr key={node.id}>
-                          <td>{node.id}</td>
+                          <td>v{node.id}</td>
                           <td>
                             {bellmanFordAnimationState.distances[node.uniqueId] === Infinity 
                               ? '∞' 
