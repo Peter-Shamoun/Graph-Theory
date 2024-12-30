@@ -232,8 +232,42 @@ export default function GraphEditor() {
   /**
    * Helper function to find the midpoint for edge label placement.
    */
-  const getMidpoint = (x1, y1, x2, y2) => {
+  const getMidpoint = (x1, y1, x2, y2, offset = 0) => {
+    // If there's an offset, calculate a point displaced perpendicular to the line
+    if (offset !== 0) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const length = Math.sqrt(dx * dx + dy * dy);
+      
+      // Calculate the perpendicular offset
+      const offsetX = -dy * offset / length;
+      const offsetY = dx * offset / length;
+      
+      return [(x1 + x2) / 2 + offsetX, (y1 + y2) / 2 + offsetY];
+    }
+    
     return [(x1 + x2) / 2, (y1 + y2) / 2];
+  };
+
+  // Add this new helper function
+  const getEdgePath = (sourceX, sourceY, targetX, targetY, offset = 0) => {
+    if (offset === 0) {
+      return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
+    }
+
+    // Calculate the perpendicular offset
+    const dx = targetX - sourceX;
+    const dy = targetY - sourceY;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    
+    const offsetX = -dy * offset / length;
+    const offsetY = dx * offset / length;
+
+    // Return a straight line with offset
+    return `M ${sourceX} ${sourceY} 
+            L ${sourceX + offsetX} ${sourceY + offsetY} 
+            L ${targetX + offsetX} ${targetY + offsetY} 
+            L ${targetX} ${targetY}`;
   };
 
   const handleEdgeClick = (edge, e) => {
@@ -1250,7 +1284,7 @@ export default function GraphEditor() {
         <div className="graph-container">
           <svg
             className="graph-canvas"
-            width="1000"
+            width="100%"
             height="600"
             onClick={handleSvgClick}
           >
@@ -1273,34 +1307,42 @@ export default function GraphEditor() {
               const targetNode = nodes.find((n) => n.uniqueId === edge.target);
               if (!sourceNode || !targetNode) return null;
 
-              const [mx, my] = getMidpoint(
-                sourceNode.x,
-                sourceNode.y,
-                targetNode.x,
-                targetNode.y
+              // Check for bidirectional edges
+              const oppositeEdge = edges.find(e => 
+                e.source === edge.target && 
+                e.target === edge.source
+              );
+
+              // Apply offset if there's a bidirectional connection
+              const offset = oppositeEdge ? 15 : 0;
+              
+              const [labelX, labelY] = getMidpoint(
+                sourceNode.x, 
+                sourceNode.y, 
+                targetNode.x, 
+                targetNode.y,
+                offset
               );
 
               return (
-                <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
-                  <line
-                    x1={sourceNode.x}
-                    y1={sourceNode.y}
-                    x2={targetNode.x}
-                    y2={targetNode.y}
-                    stroke={bfsAnimationState.visitedEdges.has(edge.id) ? "#90EE90" : "black"}
-                    strokeWidth={bfsAnimationState.visitedEdges.has(edge.id) ? "3" : "2"}
-                    style={{
-                      markerEnd: isDirected ? 'url(#arrowhead)' : 'none',
-                    }}
+                <g key={edge.id} 
+                   className="edge" 
+                   onClick={(e) => handleEdgeClick(edge, e)}>
+                  <path
+                    d={getEdgePath(
+                      sourceNode.x, 
+                      sourceNode.y, 
+                      targetNode.x, 
+                      targetNode.y,
+                      offset
+                    )}
+                    stroke="black"
+                    strokeWidth="2"
+                    fill="none"
+                    markerEnd={isDirected ? "url(#arrowhead)" : undefined}
                   />
                   {isWeighted && (
-                    <text
-                      x={mx}
-                      y={my}
-                      dy="-5"
-                      textAnchor="middle"
-                      style={{ fontSize: '12px', fill: 'red' }}
-                    >
+                    <text x={labelX} y={labelY} dy="-5">
                       {edge.weight}
                     </text>
                   )}

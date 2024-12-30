@@ -157,11 +157,11 @@ body {
 }
 
 /* Edge Styles */
-.edge line {
+.edge path {
   transition: stroke-width 0.2s;
 }
 
-.edge:hover line {
+.edge:hover path {
   stroke-width: 3px;
 }
 
