@@ -203,6 +203,8 @@ export default function GraphEditor() {
       startDFS(nodeId);
     } else if (mode === 'timed_dfs') {
       startTimedDFS(nodeId);
+    } else if (mode === 'bellman_ford') {
+      initializeBellmanFord(nodeId);
     }
   };
 
@@ -946,7 +948,16 @@ export default function GraphEditor() {
   const startBellmanFord = () => {
     if (bellmanFordAnimationState.isRunning) return;
     
-    // Initialize distances and predecessors for all nodes
+    // Prompt user to select source node
+    setMode('bellman_ford');
+    alert('Click a node to start Bellman-Ford algorithm');
+  };
+
+  const initializeBellmanFord = (sourceNodeId) => {
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    // Initialize distances and predecessors
     const initialDistances = {};
     const initialPredecessors = {};
     nodes.forEach(node => {
@@ -954,16 +965,16 @@ export default function GraphEditor() {
       initialPredecessors[node.uniqueId] = null;
     });
     
-    // Select first node as source
-    const sourceNode = nodes[0];
-    if (!sourceNode) return;
-    
     initialDistances[sourceNode.uniqueId] = 0;
 
-    // Create edge sequence for visualization
+    // Create edge sequence for visualization - randomize edge order for each iteration
     const edgeSequence = [];
-    for (let i = 0; i < nodes.length - 1; i++) {
-      edges.forEach(edge => {
+    const maxIterations = nodes.length - 1;
+    
+    for (let i = 0; i < maxIterations; i++) {
+      // Shuffle edges for this iteration
+      const shuffledEdges = [...edges].sort(() => Math.random() - 0.5);
+      shuffledEdges.forEach(edge => {
         edgeSequence.push({
           ...edge,
           iteration: i + 1
@@ -985,6 +996,7 @@ export default function GraphEditor() {
       edgeOrder: edgeSequence,
       hasNegativeCycle: false,
       currentStep: 0,
+      anyChanges: false,
       edgeSequenceDisplay: edgeSequence.map(edge => ({
         from: nodes.find(n => n.uniqueId === edge.source)?.id,
         to: nodes.find(n => n.uniqueId === edge.target)?.id,
@@ -1001,19 +1013,26 @@ export default function GraphEditor() {
 
       const n = nodes.length;
       
+      // Check if we've completed current iteration
+      if (prev.currentStep % edges.length === 0 && prev.currentStep > 0) {
+        // If no changes in this iteration, we can stop early
+        if (!prev.anyChanges && prev.iteration < n) {
+          return {
+            ...prev,
+            isRunning: false,
+            hasNegativeCycle: false
+          };
+        }
+        // Reset anyChanges for next iteration
+        prev.anyChanges = false;
+      }
+
       // Check if we've completed all iterations
       if (prev.iteration >= n) {
-        // Check for negative cycles
-        const hasNegativeCycle = edges.some(edge => {
-          const u = edge.source;
-          const v = edge.target;
-          return prev.distances[u] + edge.weight < prev.distances[v];
-        });
-
         return {
           ...prev,
           isRunning: false,
-          hasNegativeCycle
+          hasNegativeCycle: prev.anyChanges // If changes in last iteration, negative cycle exists
         };
       }
 
@@ -1027,9 +1046,11 @@ export default function GraphEditor() {
       const newPredecessors = { ...prev.predecessors };
       const newDistance = prev.distances[source] + weight;
 
+      let changed = false;
       if (newDistance < prev.distances[target]) {
         newDistances[target] = newDistance;
         newPredecessors[target] = source;
+        changed = true;
       }
 
       // Update state
@@ -1037,7 +1058,7 @@ export default function GraphEditor() {
       newVisitedEdges.add(edge.id);
 
       const nextStep = prev.currentStep + 1;
-      const nextIteration = Math.floor(nextStep / prev.edgeOrder.length);
+      const nextIteration = Math.floor(nextStep / prev.edgeOrder.length) + 1;
 
       return {
         ...prev,
@@ -1046,11 +1067,11 @@ export default function GraphEditor() {
         currentStep: nextStep,
         iteration: nextIteration,
         distances: newDistances,
-        predecessors: newPredecessors
+        predecessors: newPredecessors,
+        anyChanges: prev.anyChanges || changed
       };
     });
 
-    // Schedule next step
     setTimeout(() => {
       setBellmanFordAnimationState(prev => {
         if (!prev.isPaused && prev.isRunning) {
@@ -1128,15 +1149,18 @@ export default function GraphEditor() {
         </div>
         
         <div className="edge-sequence-section">
-          <strong>Current Edge Order:</strong>
+          <strong>Random Edge Order for Current Iteration:</strong>
           <div className="edge-sequence-visualization">
-            {edges.map((edge, index) => (
-              <div key={index} className="edge-item">
-                (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
-                 v{nodes.find(n => n.uniqueId === edge.target)?.id})
-                {index < edges.length - 1 && ', '}
-              </div>
-            ))}
+            {edges
+              .slice()
+              .sort(() => Math.random() - 0.5)
+              .map((edge, index) => (
+                <div key={index} className="edge-item">
+                  (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
+                   v{nodes.find(n => n.uniqueId === edge.target)?.id})
+                  {index < edges.length - 1 && ', '}
+                </div>
+              ))}
           </div>
         </div>
 
@@ -1175,7 +1199,7 @@ export default function GraphEditor() {
                   </td>
                   <td>
                     {bellmanFordAnimationState.predecessors[node.uniqueId] 
-                      ? `v${nodes.find(n => n.uniqueId === bellmanFordAnimationState.predecessors[node.uniqueId])?.id}` 
+                      ? nodes.find(n => n.uniqueId === bellmanFordAnimationState.predecessors[node.uniqueId])?.id 
                       : '-'}
                   </td>
                 </tr>
@@ -1183,6 +1207,14 @@ export default function GraphEditor() {
             </tbody>
           </table>
         </div>
+
+        {!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0 && (
+          <div className={`algorithm-result ${bellmanFordAnimationState.hasNegativeCycle ? 'invalid' : 'valid'}`}>
+            {bellmanFordAnimationState.hasNegativeCycle 
+              ? "Negative Cycle Detected!"
+              : "Shortest paths found successfully"}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1595,7 +1627,7 @@ export default function GraphEditor() {
               <h3>Bellman-Ford Status</h3>
               <div className="bellman-ford-status">
                 <div className="current-state">
-                  <strong>Iteration:</strong> {bellmanFordAnimationState.iteration + 1}/{nodes.length}
+                  <strong>Iteration:</strong> {bellmanFordAnimationState.iteration}/{nodes.length - 1}
                 </div>
                 
                 <div className="distances-table">
