@@ -1294,11 +1294,11 @@ export default function GraphEditor() {
               <marker
                 id="arrowhead"
                 viewBox="0 0 10 10"
-                refX="8"
+                refX="9"
                 refY="5"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto-start-reverse"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
               >
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
               </marker>
