@@ -1294,7 +1294,7 @@ export default function GraphEditor() {
               <marker
                 id="arrowhead"
                 viewBox="0 0 10 10"
-                refX="9"
+                refX="7"
                 refY="5"
                 markerWidth="8"
                 markerHeight="8"
