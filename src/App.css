@@ -49,6 +49,9 @@ body {
   background: var(--surface);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .left-controls {
@@ -446,10 +449,11 @@ body {
 
 .main-content {
   display: grid;
-  grid-template-columns: 1fr 300px; /* Main content and algorithm sidebar */
+  grid-template-columns: 1fr 300px;
   gap: 2rem;
-  margin: 0 1rem; /* Remove top margin */
-  position: relative; /* Add position relative */
+  margin: 0 1rem;
+  position: relative;
+  margin-top: -8rem;
 }
 
 /* Left side container for graph and status boxes */
@@ -469,9 +473,8 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   height: fit-content;
   position: sticky;
-  top: 0; /* Change from 2rem to 0 */
-  margin-top: -4rem; /* Add negative margin to move it up */
-  z-index: 10; /* Ensure it stays above other content */
+  top: 1rem;
+  z-index: 10;
 }
 
 /* Status containers at the bottom */
@@ -511,12 +514,12 @@ body {
 @media (max-width: 992px) {
   .main-content {
     grid-template-columns: 1fr;
+    margin-top: 0;
   }
   
   .algorithm-container {
     grid-column: 1;
     position: static;
-    margin-top: 0; /* Reset margin for mobile */
   }
 }
 
