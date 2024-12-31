@@ -1570,7 +1570,7 @@ export default function GraphEditor() {
       const newPriorityQueue = [...prev.priorityQueue];
 
       if (adjList[newNodeId]) {
-        adjList[newNodeId].forEach(({ node: neighborId, weight }) => {
+        adjList[newNodeId].forEach(({ node: neighborId, weight: edgeWeight }) => {
           const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
           if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
 
@@ -1580,7 +1580,7 @@ export default function GraphEditor() {
           );
           
           if (edge) {
-            newPriorityQueue.push([edge.id, weight]);
+            newPriorityQueue.push([edge.id, edgeWeight]);
           }
         });
       }
@@ -1594,7 +1594,7 @@ export default function GraphEditor() {
         mstEdges: newMSTEdges,
         totalWeight: prev.totalWeight + weight,
         currentEdge: currentEdgeId,
-        iterationCount: prev.iterationCount + 1, // Only increment when we add an edge to MST
+        iterationCount: prev.iterationCount + 1,
         error: newProcessedNodes.size < nodes.length && newPriorityQueue.length === 0 ? 
           "Graph is disconnected. Cannot construct complete MST." : null
       };
