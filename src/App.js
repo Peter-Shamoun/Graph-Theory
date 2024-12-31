@@ -2756,9 +2756,8 @@ export default function GraphEditor() {
               <button 
                 className="btn btn-primary"
                 onClick={startKruskal}
-                disabled={kruskalAnimationState.isRunning || !isWeighted || isDirected}
-                title={!isWeighted ? "Kruskal's algorithm requires a weighted graph" : 
-                       isDirected ? "Kruskal's algorithm requires an undirected graph" : ""}
+                disabled={kruskalAnimationState.isRunning || !isWeighted}
+                title={!isWeighted ? "Kruskal's algorithm requires a weighted graph" : "Click to start Kruskal's algorithm"}
               >
                 Start Kruskal's Algorithm
               </button>
