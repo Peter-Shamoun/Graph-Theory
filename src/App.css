@@ -158,11 +158,15 @@ body {
 
 /* Edge Styles */
 .edge path {
-  transition: stroke-width 0.2s;
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
 
-.edge:hover path {
+.edge.current path {
   stroke-width: 3px;
+}
+
+.edge.predecessor path {
+  stroke: #90EE90;
 }
 
 .edge text {

@@ -1234,6 +1234,76 @@ export default function GraphEditor() {
     </div>
   );
 
+  // Add this function to handle edge styling
+  const getEdgeStyle = (edge) => {
+    if (bellmanFordAnimationState.isRunning) {
+      // Current edge being evaluated
+      if (bellmanFordAnimationState.currentEdge === edge.id) {
+        return "#ff8c00"; // Orange for current edge
+      }
+      
+      // Check if this edge represents a predecessor relationship
+      const targetNode = edge.target;
+      const predecessorNode = bellmanFordAnimationState.predecessors[targetNode];
+      if (predecessorNode === edge.source) {
+        return "#90EE90"; // Light green for predecessor edges
+      }
+    }
+    return "#999"; // Default edge color
+  };
+
+  // Update the edge rendering in your SVG
+  const renderEdge = (edge) => {
+    const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
+    const targetNode = nodes.find((n) => n.uniqueId === edge.target);
+    if (!sourceNode || !targetNode) return null;
+
+    // Check for bidirectional edges
+    const oppositeEdge = edges.find(e => 
+      e.source === edge.target && 
+      e.target === edge.source
+    );
+
+    // Apply offset if there's a bidirectional connection
+    const offset = oppositeEdge ? 20 : 0;
+    
+    const [labelX, labelY] = getMidpoint(
+      sourceNode.x, 
+      sourceNode.y, 
+      targetNode.x, 
+      targetNode.y,
+      offset
+    );
+
+    return (
+      <g key={edge.id} className="edge">
+        <path
+          d={getEdgePath(
+            sourceNode.x, 
+            sourceNode.y, 
+            targetNode.x, 
+            targetNode.y,
+            oppositeEdge ? 20 : 0
+          )}
+          stroke={getEdgeStyle(edge)}
+          strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
+          markerEnd="url(#arrowhead)"
+        />
+        {isWeighted && (
+          <text 
+            x={labelX} 
+            y={labelY}  
+            dy="-5"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+          >
+            {edge.weight}
+          </text>
+        )}
+      </g>
+    );
+  };
+
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
@@ -1385,14 +1455,9 @@ export default function GraphEditor() {
                       targetNode.y,
                       oppositeEdge ? 20 : 0
                     )}
-                    stroke="black"
-                    strokeWidth="2"
-                    fill="none"
-                    markerEnd={isDirected ? "url(#arrowhead)" : "none"}
-                    style={{ 
-                      strokeLinecap: "round",
-                      strokeLinejoin: "round"
-                    }}
+                    stroke={getEdgeStyle(edge)}
+                    strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
+                    markerEnd="url(#arrowhead)"
                   />
                   {isWeighted && (
                     <text 
