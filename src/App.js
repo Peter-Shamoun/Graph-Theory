@@ -1550,10 +1550,7 @@ export default function GraphEditor() {
       
       // Skip if both nodes are already in MST
       if (sourceInMST && targetInMST) {
-        return {
-          ...prev,
-          iterationCount: prev.iterationCount + 1
-        };
+        return prev; // Don't increment iteration count for skipped edges
       }
 
       // Get the new node to add to MST
@@ -1597,7 +1594,7 @@ export default function GraphEditor() {
         mstEdges: newMSTEdges,
         totalWeight: prev.totalWeight + weight,
         currentEdge: currentEdgeId,
-        iterationCount: prev.iterationCount + 1,
+        iterationCount: prev.iterationCount + 1, // Only increment when we add an edge to MST
         error: newProcessedNodes.size < nodes.length && newPriorityQueue.length === 0 ? 
           "Graph is disconnected. Cannot construct complete MST." : null
       };
@@ -2213,11 +2210,18 @@ export default function GraphEditor() {
                 <div className="mst-edges-section">
                   <strong>MST Edges:</strong>
                   <div className="mst-edges-visualization">
-                    {Array.from(primAnimationState.mstEdges).map((edgeId, index) => (
-                      <div key={index} className="edge-item">
-                        (v{edges.find(e => e.id === edgeId)?.source} → v{edges.find(e => e.id === edgeId)?.target})
-                      </div>
-                    ))}
+                    {Array.from(primAnimationState.mstEdges).map((edgeId, index) => {
+                      const edge = edges.find(e => e.id === edgeId);
+                      if (!edge) return null;
+                      const sourceNode = nodes.find(n => n.uniqueId === edge.source);
+                      const targetNode = nodes.find(n => n.uniqueId === edge.target);
+                      if (!sourceNode || !targetNode) return null;
+                      return (
+                        <div key={index} className="edge-item">
+                          ({sourceNode.id} → {targetNode.id})
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
