@@ -1470,7 +1470,10 @@ export default function GraphEditor() {
                     )}
                     stroke={getEdgeStyle(edge)}
                     strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-                    markerEnd="url(#arrowhead-with-background)"
+                    markerEnd={isDirected ? "url(#arrowhead-with-background)" : undefined}
+                    style={{
+                      '--marker-color': getEdgeStyle(edge)
+                    }}
                     fill="none"
                   />
                   {isWeighted && (
