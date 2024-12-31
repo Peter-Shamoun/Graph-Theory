@@ -787,11 +787,11 @@ body {
 }
 
 /* Update marker styles */
-#arrowhead-with-background {
-  stroke: none;
+#arrowhead-with-background path:last-child {
+  fill: var(--marker-color, #999);
 }
 
 .edge path {
-  fill: none;  /* Ensure paths aren't filled */
+  fill: none;
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
