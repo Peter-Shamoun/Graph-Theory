@@ -816,3 +816,78 @@ body {
 .edge.shortest-path marker path {
   fill: #90EE90;
 }
+
+/* Add Dijkstra's algorithm specific styles */
+.dijkstra-status-container {
+  width: 100%;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.priority-queue-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+}
+
+.priority-queue-visualization {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+.priority-queue-visualization .queue-item {
+  background: var(--accent);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  color: white;
+  font-size: 0.9rem;
+}
+
+/* Dijkstra's table styles */
+.dijkstra-status .distances-table tr.current {
+  background-color: #ffd700;
+}
+
+.dijkstra-status .distances-table tr.processed {
+  background-color: #90EE90;
+}
+
+.dijkstra-status .distances-table tr.visited {
+  background-color: #FFE4B5;
+}
+
+/* Animation styles for Dijkstra's algorithm */
+.dijkstra-status .distances-table tr {
+  transition: background-color 0.3s ease;
+}
+
+.dijkstra-status .priority-queue-visualization {
+  transition: all 0.3s ease;
+}
+
+.dijkstra-status .priority-queue-visualization .queue-item {
+  transition: transform 0.3s ease;
+}
+
+.dijkstra-status .priority-queue-visualization .queue-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Responsive styles for Dijkstra's algorithm */
+@media (max-width: 768px) {
+  .priority-queue-visualization {
+    flex-direction: column;
+  }
+  
+  .priority-queue-visualization .queue-item {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -77,6 +77,23 @@ export default function GraphEditor() {
     showShortestPaths: false,
   });
 
+  // Add Dijkstra's algorithm state
+  const [dijkstraAnimationState, setDijkstraAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    currentNode: null,
+    sourceNode: null,
+    predecessors: {},
+    distances: {},
+    priorityQueue: [], // Array of [nodeId, distance] pairs
+    processedNodes: new Set(),
+    currentEdge: null,
+    relaxedEdges: new Set(),
+    iterationCount: 0,
+  });
+
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
   // Add a ref for unique edge IDs
@@ -210,6 +227,8 @@ export default function GraphEditor() {
       startTimedDFS(nodeId);
     } else if (mode === 'bellman_ford') {
       initializeBellmanFord(nodeId);
+    } else if (mode === 'dijkstra') {
+      initializeDijkstra(nodeId);
     }
   };
 
@@ -313,6 +332,7 @@ export default function GraphEditor() {
     resetBFS();
     resetDFS();
     resetTimedDFS();
+    resetBellmanFord();
   };
 
   // Add function to handle directed/undirected toggle
@@ -1144,102 +1164,164 @@ export default function GraphEditor() {
     });
   };
 
-  // Update the algorithm section UI
-  const BellmanFordSection = () => (
-    <div className="algorithm-section">
-      <h3>Bellman Ford</h3>
-      <div className="algorithm-controls">
-        <button 
-          className="btn btn-primary"
-          onClick={startBellmanFord}
-          disabled={bellmanFordAnimationState.isRunning || nodes.length === 0}
-        >
-          Start Bellman Ford
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={togglePauseBellmanFord}
-          disabled={!bellmanFordAnimationState.isRunning}
-        >
-          {bellmanFordAnimationState.isPaused ? 'Resume' : 'Pause'} Bellman Ford
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={resetBellmanFord}
-          disabled={!bellmanFordAnimationState.isRunning && !bellmanFordAnimationState.visitedNodes.size}
-        >
-          Reset Bellman Ford
-        </button>
-      </div>
-    </div>
-  );
+  // Add Dijkstra's algorithm functions
+  const startDijkstra = () => {
+    if (dijkstraAnimationState.isRunning) return;
+    
+    // Check for negative weights
+    const hasNegativeWeights = edges.some(edge => edge.weight < 0);
+    if (hasNegativeWeights) {
+      alert('Dijkstra\'s algorithm cannot handle negative weights. Please use Bellman-Ford instead.');
+      return;
+    }
+    
+    // Prompt user to select source node
+    setMode('dijkstra');
+    alert('Click a node to start Dijkstra\'s algorithm');
+  };
 
-  // Add this to your status display section
-  const BellmanFordStatus = () => (
-    <div className="bellman-ford-status-container">
-      <h3>Bellman-Ford Status</h3>
-      <div className="bellman-ford-status">
-        <div className="current-state">
-          <strong>Iterations completed:</strong> {bellmanFordAnimationState.iterationCount || 0}
-        </div>
-        
-        <div className="edge-sequence-section">
-          <strong>Edge Processing Order:</strong>
-          <div className="edge-sequence-visualization">
-            {edges.map((edge, index) => (
-              <div 
-                key={index} 
-                className={`edge-item ${edge.id === bellmanFordAnimationState.currentEdge ? 'current' : ''}`}
-              >
-                (v{nodes.find(n => n.uniqueId === edge.source)?.id}, 
-                 v{nodes.find(n => n.uniqueId === edge.target)?.id})
-                {index < edges.length - 1 && ', '}
-              </div>
-            ))}
-          </div>
-        </div>
+  const initializeDijkstra = (sourceNodeId) => {
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    // Initialize distances and predecessors
+    const initialDistances = {};
+    const initialPredecessors = {};
+    nodes.forEach(node => {
+      initialDistances[node.uniqueId] = Infinity;
+      initialPredecessors[node.uniqueId] = null;
+    });
+    
+    initialDistances[sourceNode.uniqueId] = 0;
 
-        <div className="distances-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Node</th>
-                <th>Distance</th>
-                <th>Predecessor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nodes.sort((a, b) => a.id - b.id).map(node => (
-                <tr key={node.id}>
-                  <td>v{node.id}</td>
-                  <td>
-                    {bellmanFordAnimationState.distances[node.uniqueId] === Infinity 
-                      ? '∞' 
-                      : bellmanFordAnimationState.distances[node.uniqueId]}
-                  </td>
-                  <td>
-                    {bellmanFordAnimationState.predecessors[node.uniqueId] 
-                      ? nodes.find(n => n.uniqueId === bellmanFordAnimationState.predecessors[node.uniqueId])?.id 
-                      : '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    setDijkstraAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      currentNode: sourceNode.uniqueId,
+      sourceNode: sourceNode.uniqueId,
+      predecessors: initialPredecessors,
+      distances: initialDistances,
+      priorityQueue: [[sourceNode.uniqueId, 0]], // [nodeId, distance]
+      processedNodes: new Set(),
+      currentEdge: null,
+      relaxedEdges: new Set(),
+      iterationCount: 0
+    }));
 
-        {!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0 && (
-          <div className={`algorithm-result ${bellmanFordAnimationState.hasNegativeCycle ? 'invalid' : 'valid'}`}>
-            {bellmanFordAnimationState.hasNegativeCycle 
-              ? "Negative Cycle Detected!"
-              : "Shortest paths found successfully"}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    runDijkstraStep();
+  };
 
-  // Add this function to handle edge styling
+  const runDijkstraStep = async () => {
+    setDijkstraAnimationState(prev => {
+      if (prev.isPaused || prev.priorityQueue.length === 0) {
+        return prev;
+      }
+
+      // Get node with minimum distance from priority queue
+      prev.priorityQueue.sort((a, b) => a[1] - b[1]);
+      const [currentNode, currentDistance] = prev.priorityQueue.shift();
+      
+      // Skip if node already processed
+      if (prev.processedNodes.has(currentNode)) {
+        return {
+          ...prev,
+          iterationCount: prev.iterationCount + 1
+        };
+      }
+
+      // Mark node as processed
+      const newProcessedNodes = new Set(prev.processedNodes);
+      newProcessedNodes.add(currentNode);
+
+      // Get current node's neighbors
+      const currentNodeId = nodes.find(n => n.uniqueId === currentNode).id;
+      const adjList = getAdjacencyList();
+      const neighbors = adjList[currentNodeId];
+
+      // Process each neighbor
+      const newDistances = { ...prev.distances };
+      const newPredecessors = { ...prev.predecessors };
+      const newPriorityQueue = [...prev.priorityQueue];
+      const newVisitedEdges = new Set(prev.visitedEdges);
+      const newRelaxedEdges = new Set(prev.relaxedEdges);
+
+      neighbors.forEach(({ node: neighborId, weight }) => {
+        const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
+        if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
+
+        const edge = edges.find(e => 
+          (e.source === currentNode && e.target === neighborUniqueId) ||
+          (!isDirected && e.source === neighborUniqueId && e.target === currentNode)
+        );
+        if (edge) newVisitedEdges.add(edge.id);
+
+        const newDistance = prev.distances[currentNode] + weight;
+        if (newDistance < prev.distances[neighborUniqueId]) {
+          newDistances[neighborUniqueId] = newDistance;
+          newPredecessors[neighborUniqueId] = currentNode;
+          newPriorityQueue.push([neighborUniqueId, newDistance]);
+          if (edge) newRelaxedEdges.add(edge.id);
+        }
+      });
+
+      return {
+        ...prev,
+        currentNode,
+        priorityQueue: newPriorityQueue,
+        distances: newDistances,
+        predecessors: newPredecessors,
+        processedNodes: newProcessedNodes,
+        visitedEdges: newVisitedEdges,
+        relaxedEdges: newRelaxedEdges,
+        iterationCount: prev.iterationCount + 1
+      };
+    });
+
+    // Add a small delay to make the animation more visible
+    await new Promise(resolve => setTimeout(resolve, getAnimationDelay()));
+
+    // Continue if still running
+    setDijkstraAnimationState(prev => {
+      if (!prev.isPaused && prev.priorityQueue.length > 0) {
+        runDijkstraStep();
+      } else if (prev.priorityQueue.length === 0) {
+        return { ...prev, isRunning: false };
+      }
+      return prev;
+    });
+  };
+
+  const togglePauseDijkstra = () => {
+    setDijkstraAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.priorityQueue.length > 0) {
+        runDijkstraStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetDijkstra = () => {
+    setDijkstraAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      currentNode: null,
+      sourceNode: null,
+      predecessors: {},
+      distances: {},
+      priorityQueue: [],
+      processedNodes: new Set(),
+      currentEdge: null,
+      relaxedEdges: new Set(),
+      iterationCount: 0
+    });
+  };
+
   const getEdgeStyle = (edge) => {
     // After algorithm completion, highlight shortest path edges
     if (!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0) {
@@ -1264,65 +1346,33 @@ export default function GraphEditor() {
         return "#90EE90"; // Light green for predecessor edges
       }
     }
+    // Dijkstra's algorithm styling
+    else if (!dijkstraAnimationState.isRunning && dijkstraAnimationState.visitedNodes.size > 0) {
+      // Check if this edge represents a final shortest path
+      const targetNode = edge.target;
+      const predecessorNode = dijkstraAnimationState.predecessors[targetNode];
+      if (predecessorNode === edge.source) {
+        return "#90EE90"; // Light green for shortest path edges
+      }
+    }
+    else if (dijkstraAnimationState.isRunning) {
+      // Edge being currently evaluated
+      if (dijkstraAnimationState.currentEdge === edge.id) {
+        return "#ff8c00"; // Orange for current edge
+      }
+      
+      // Edge that has been relaxed (improved the distance)
+      if (dijkstraAnimationState.relaxedEdges.has(edge.id)) {
+        return "#90EE90"; // Light green for relaxed edges
+      }
+      
+      // Edge that has been visited but not relaxed
+      if (dijkstraAnimationState.visitedEdges.has(edge.id)) {
+        return "#ddd"; // Light gray for visited edges
+      }
+    }
     
     return "#999"; // Default edge color
-  };
-
-  // Update the edge rendering in your SVG
-  const renderEdge = (edge) => {
-    const sourceNode = nodes.find((n) => n.uniqueId === edge.source);
-    const targetNode = nodes.find((n) => n.uniqueId === edge.target);
-    if (!sourceNode || !targetNode) return null;
-
-    // Check for bidirectional edges
-    const oppositeEdge = edges.find(e => 
-      e.source === edge.target && 
-      e.target === edge.source
-    );
-
-    // Apply offset if there's a bidirectional connection
-    const offset = oppositeEdge ? 20 : 0;
-    
-    const [labelX, labelY] = getMidpoint(
-      sourceNode.x, 
-      sourceNode.y, 
-      targetNode.x, 
-      targetNode.y,
-      offset
-    );
-
-    const edgeColor = getEdgeStyle(edge);
-    return (
-      <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
-        <path
-          d={getEdgePath(
-            sourceNode.x, 
-            sourceNode.y, 
-            targetNode.x, 
-            targetNode.y,
-            oppositeEdge ? 20 : 0
-          )}
-          stroke={edgeColor}
-          strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-          markerEnd={isDirected ? `url(#arrowhead-with-background)` : undefined}
-          style={{
-            '--marker-color': edgeColor
-          }}
-          fill="none"
-        />
-        {isWeighted && (
-          <text 
-            x={labelX} 
-            y={labelY}  
-            dy="-5"
-            textAnchor="middle"
-            alignmentBaseline="middle"
-          >
-            {edge.weight}
-          </text>
-        )}
-      </g>
-    );
   };
 
   return (
@@ -1478,10 +1528,9 @@ export default function GraphEditor() {
                 offset
               );
 
+              const edgeColor = getEdgeStyle(edge);
               return (
-                <g key={edge.id} 
-                   className="edge" 
-                   onClick={(e) => handleEdgeClick(edge, e)}>
+                <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
                   <path
                     d={getEdgePath(
                       sourceNode.x, 
@@ -1490,11 +1539,11 @@ export default function GraphEditor() {
                       targetNode.y,
                       oppositeEdge ? 20 : 0
                     )}
-                    stroke={getEdgeStyle(edge)}
+                    stroke={edgeColor}
                     strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-                    markerEnd={isDirected ? "url(#arrowhead-with-background)" : undefined}
+                    markerEnd={isDirected ? `url(#arrowhead-with-background)` : undefined}
                     style={{
-                      '--marker-color': getEdgeStyle(edge)
+                      '--marker-color': edgeColor
                     }}
                     fill="none"
                   />
@@ -1810,6 +1859,77 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {/* Add Dijkstra's algorithm status display */}
+          {(dijkstraAnimationState.isRunning || dijkstraAnimationState.visitedNodes.size > 0) && (
+            <div className="dijkstra-status-container">
+              <h3>Dijkstra's Algorithm Status</h3>
+              <div className="dijkstra-status">
+                <div className="current-state">
+                  <strong>Nodes processed:</strong> {dijkstraAnimationState.processedNodes.size}
+                </div>
+                
+                <div className="priority-queue-section">
+                  <strong>Priority Queue:</strong>
+                  <div className="priority-queue-visualization">
+                    {dijkstraAnimationState.priorityQueue.map(([nodeId, distance], index) => (
+                      <div key={index} className="queue-item">
+                        v{nodes.find(n => n.uniqueId === nodeId)?.id} (dist: {distance})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="distances-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Node</th>
+                        <th>Distance</th>
+                        <th>Predecessor</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nodes.sort((a, b) => a.id - b.id).map(node => (
+                        <tr 
+                          key={node.id}
+                          className={
+                            node.uniqueId === dijkstraAnimationState.currentNode ? 'current' :
+                            dijkstraAnimationState.processedNodes.has(node.uniqueId) ? 'processed' :
+                            dijkstraAnimationState.visitedNodes.has(node.uniqueId) ? 'visited' : ''
+                          }
+                        >
+                          <td>v{node.id}</td>
+                          <td>
+                            {dijkstraAnimationState.distances[node.uniqueId] === Infinity 
+                              ? '∞' 
+                              : dijkstraAnimationState.distances[node.uniqueId]}
+                          </td>
+                          <td>
+                            {dijkstraAnimationState.predecessors[node.uniqueId] 
+                              ? nodes.find(n => n.uniqueId === dijkstraAnimationState.predecessors[node.uniqueId])?.id 
+                              : '-'}
+                          </td>
+                          <td>
+                            {node.uniqueId === dijkstraAnimationState.currentNode ? 'Current' :
+                             dijkstraAnimationState.processedNodes.has(node.uniqueId) ? 'Processed' :
+                             dijkstraAnimationState.visitedNodes.has(node.uniqueId) ? 'In Queue' : 'Unvisited'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {!dijkstraAnimationState.isRunning && dijkstraAnimationState.visitedNodes.size > 0 && (
+                  <div className="algorithm-result valid">
+                    Shortest paths found successfully
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -1932,6 +2052,32 @@ export default function GraphEditor() {
             </div>
           </div>                
 
+          <div className="algorithm-section">
+            <h3>Dijkstra's Algorithm</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={startDijkstra}
+                disabled={dijkstraAnimationState.isRunning}
+              >
+                Start Dijkstra's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseDijkstra}
+                disabled={!dijkstraAnimationState.isRunning}
+              >
+                {dijkstraAnimationState.isPaused ? 'Resume' : 'Pause'} Dijkstra's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetDijkstra}
+                disabled={!dijkstraAnimationState.isRunning && !dijkstraAnimationState.visitedNodes.size}
+              >
+                Reset Dijkstra's Algorithm
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
