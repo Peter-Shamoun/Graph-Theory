@@ -599,7 +599,7 @@ body {
   gap: 0.5rem;
   margin-top: 0.5rem;
   padding: 0.5rem;
-  max-height: 200px; /* Limit height and enable scrolling if needed */
+  max-height: 10000px; /* Limit height and enable scrolling if needed */
   overflow-y: auto;
 }
 
