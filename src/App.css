@@ -49,6 +49,8 @@ body {
   background: var(--surface);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-width: calc(100% - 320px);
+  margin-right: auto;
 }
 
 .left-controls {
@@ -219,6 +221,7 @@ body {
   flex-direction: column;
   gap: 2rem;
   margin-top: 1rem;
+  width: 100%;
 }
 
 .graph-canvas {
@@ -445,10 +448,8 @@ body {
 }
 
 .main-content {
-  display: grid;
-  grid-template-columns: 1fr 300px; /* Main content and algorithm sidebar */
-  gap: 2rem;
-  margin: 2rem 1rem;
+  display: block;
+  margin: 2rem 320px 2rem 1rem;
 }
 
 /* Left side container for graph and status boxes */
@@ -461,14 +462,17 @@ body {
 
 /* Right side algorithm container */
 .algorithm-container {
-  grid-column: 2;
-  background: var(--surface);
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 9999;
+  margin: 0;
   padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: fit-content;
-  position: sticky;
-  top: 2rem;
+  background: var(--surface);
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Status containers at the bottom */
@@ -511,8 +515,18 @@ body {
   }
   
   .algorithm-container {
-    grid-column: 1;
     position: static;
+    width: 100%;
+    height: auto;
+    margin-top: 2rem;
+  }
+
+  .graph-editor__controls {
+    max-width: 100%;
+  }
+
+  .main-content {
+    margin: 2rem 1rem;
   }
 }
 
