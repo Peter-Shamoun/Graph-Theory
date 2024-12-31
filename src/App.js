@@ -115,6 +115,7 @@ export default function GraphEditor() {
   const [kruskalAnimationState, setKruskalAnimationState] = useState({
     isRunning: false,
     isPaused: false,
+    isComplete: false, // Add this flag
     visitedNodes: new Set(),
     visitedEdges: new Set(),
     currentEdge: null,
@@ -446,6 +447,7 @@ export default function GraphEditor() {
     resetBellmanFord();
     resetDijkstra();
     resetPrim();
+    resetKruskal(); // Add this line
   };
 
   // Add function to handle directed/undirected toggle
@@ -1495,8 +1497,25 @@ export default function GraphEditor() {
   };
 
   const getEdgeStyle = (edge) => {
+    // Kruskal's algorithm styling - moved to top priority
+    if (kruskalAnimationState.isRunning || kruskalAnimationState.isComplete) {
+      // Edge is part of the MST
+      if (kruskalAnimationState.mstEdges.has(edge.id)) {
+        return "#90EE90"; // Light green for MST edges
+      }
+      
+      // Current edge being evaluated (only during running)
+      if (kruskalAnimationState.isRunning && kruskalAnimationState.currentEdge === edge.id) {
+        return "#ff4500"; // Red-orange for current candidate edge
+      }
+      
+      // Edge that has been visited but not added to MST
+      if (kruskalAnimationState.visitedEdges.has(edge.id)) {
+        return "#ddd"; // Light gray for visited edges
+      }
+    }
     // After algorithm completion, highlight shortest path edges
-    if (!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0) {
+    else if (!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0) {
       // Check if this edge represents a final shortest path
       const targetNode = edge.target;
       const predecessorNode = bellmanFordAnimationState.predecessors[targetNode];
@@ -1556,23 +1575,6 @@ export default function GraphEditor() {
       
       // Edge that has been visited but not added to MST
       if (primAnimationState.visitedEdges.has(edge.id)) {
-        return "#ddd"; // Light gray for visited edges
-      }
-    }
-    // Kruskal's algorithm styling
-    else if (kruskalAnimationState.isRunning || kruskalAnimationState.visitedNodes.size > 0) {
-      // Edge is part of the MST
-      if (kruskalAnimationState.mstEdges.has(edge.id)) {
-        return "#90EE90"; // Light green for MST edges
-      }
-      
-      // Current edge being evaluated
-      if (kruskalAnimationState.currentEdge === edge.id) {
-        return "#ff4500"; // Red-orange for current candidate edge
-      }
-      
-      // Edge that has been visited but not added to MST
-      if (kruskalAnimationState.visitedEdges.has(edge.id)) {
         return "#ddd"; // Light gray for visited edges
       }
     }
@@ -1804,6 +1806,7 @@ export default function GraphEditor() {
       ...prev,
       isRunning: true,
       isPaused: false,
+      isComplete: false, // Add this flag
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
@@ -1870,6 +1873,7 @@ export default function GraphEditor() {
         return {
           ...prev,
           isRunning: false,
+          isComplete: true, // Set this to true when algorithm completes
           error: isConnected ? null : "Graph is disconnected. Forest of MSTs generated."
         };
       }
@@ -1900,6 +1904,7 @@ export default function GraphEditor() {
     setKruskalAnimationState({
       isRunning: false,
       isPaused: false,
+      isComplete: false, // Reset this flag
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
@@ -2511,7 +2516,7 @@ export default function GraphEditor() {
           )}
 
           {/* Add Kruskal's algorithm status display */}
-          {(kruskalAnimationState.isRunning || kruskalAnimationState.visitedNodes.size > 0) && (
+          {(kruskalAnimationState.isRunning || kruskalAnimationState.isComplete) && (
             <div className="kruskal-status-container">
               <h3>Kruskal's Algorithm Status</h3>
               <div className="kruskal-status">
@@ -2545,7 +2550,7 @@ export default function GraphEditor() {
                   <strong>Connected Components:</strong> {kruskalAnimationState.numComponents}
                 </div>
 
-                {!kruskalAnimationState.isRunning && kruskalAnimationState.visitedNodes.size > 0 && (
+                {!kruskalAnimationState.isRunning && kruskalAnimationState.isComplete && (
                   <div className={`algorithm-result ${kruskalAnimationState.error ? 'invalid' : 'valid'}`}>
                     {kruskalAnimationState.error || "MST found successfully"}
                   </div>
