@@ -35,7 +35,7 @@ body {
 }
 
 .graph-editor__title {
-  font-size: 2.5rem;
+  font-size: 1.25 rem;
   color: var(--primary);
   margin-bottom: 1rem;
 }
