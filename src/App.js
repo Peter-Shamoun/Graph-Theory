@@ -1799,14 +1799,17 @@ export default function GraphEditor() {
     // Sort edges by weight
     const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
 
-    // Get initial components
-    const { nodeToComponent, numComponents } = dsu.getComponents();
+    // For directed graphs, we need to track reachability
+    const reachableNodes = new Map();
+    nodes.forEach(node => {
+      reachableNodes.set(node.uniqueId, new Set([node.uniqueId]));
+    });
 
     setKruskalAnimationState(prev => ({
       ...prev,
       isRunning: true,
       isPaused: false,
-      isComplete: false, // Add this flag
+      isComplete: false,
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
@@ -1815,8 +1818,9 @@ export default function GraphEditor() {
       edgesProcessed: 0,
       sortedEdges,
       currentStep: 0,
-      components: nodeToComponent,
-      numComponents,
+      components: new Map(),
+      numComponents: nodes.length,
+      reachableNodes,
       error: null
     }));
 
@@ -1832,20 +1836,31 @@ export default function GraphEditor() {
       const currentEdge = prev.sortedEdges[prev.currentStep];
       const { source, target, weight } = currentEdge;
 
-      // Check if adding this edge would create a cycle
-      const wouldCreateCycle = dsu.inSameSet(source, target);
+      // For directed graphs, check if adding this edge would create a cycle
+      // by checking if target is already reachable from source
+      const sourceReachable = prev.reachableNodes.get(source);
+      const wouldCreateCycle = sourceReachable.has(target);
       
       let newMSTEdges = new Set(prev.mstEdges);
       let newTotalWeight = prev.totalWeight;
+      let newReachableNodes = new Map(prev.reachableNodes);
       
       if (!wouldCreateCycle) {
-        dsu.union(source, target);
+        // Add edge to MST
         newMSTEdges.add(currentEdge.id);
         newTotalWeight += weight;
-      }
 
-      // Get updated components
-      const { nodeToComponent, numComponents } = dsu.getComponents();
+        // Update reachability
+        const targetReachable = prev.reachableNodes.get(target);
+        const newReachableFromSource = new Set([...sourceReachable, ...targetReachable]);
+        
+        // Update reachability for all nodes that could reach the source
+        prev.reachableNodes.forEach((reachable, nodeId) => {
+          if (reachable.has(source)) {
+            newReachableNodes.set(nodeId, new Set([...reachable, ...newReachableFromSource]));
+          }
+        });
+      }
 
       return {
         ...prev,
@@ -1855,8 +1870,8 @@ export default function GraphEditor() {
         totalWeight: newTotalWeight,
         edgesProcessed: prev.edgesProcessed + 1,
         currentStep: prev.currentStep + 1,
-        components: nodeToComponent,
-        numComponents
+        reachableNodes: newReachableNodes,
+        numComponents: nodes.length - newMSTEdges.size
       };
     });
 
@@ -1868,13 +1883,16 @@ export default function GraphEditor() {
       if (!prev.isPaused && prev.currentStep < prev.sortedEdges.length) {
         runKruskalStep(dsu);
       } else if (prev.currentStep >= prev.sortedEdges.length) {
-        // Check if we have a valid MST (all nodes connected)
-        const isConnected = prev.numComponents === 1;
+        // Check if we have a valid MST (all nodes are reachable from each other)
+        const firstNode = nodes[0]?.uniqueId;
+        const isFullyConnected = firstNode && 
+          prev.reachableNodes.get(firstNode).size === nodes.length;
+        
         return {
           ...prev,
           isRunning: false,
-          isComplete: true, // Set this to true when algorithm completes
-          error: isConnected ? null : "Graph is disconnected. Forest of MSTs generated."
+          isComplete: true,
+          error: isFullyConnected ? null : "Graph is not strongly connected. Forest of directed MSTs generated."
         };
       }
       return prev;
