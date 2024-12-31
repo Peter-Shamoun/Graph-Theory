@@ -1901,10 +1901,11 @@ export default function GraphEditor() {
   };
 
   const resetKruskal = () => {
+    // Create a fresh state object with all values cleared
     setKruskalAnimationState({
       isRunning: false,
       isPaused: false,
-      isComplete: false, // Reset this flag
+      isComplete: false,
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
@@ -2757,7 +2758,7 @@ export default function GraphEditor() {
               <button
                 className="btn btn-secondary"
                 onClick={resetKruskal}
-                disabled={!kruskalAnimationState.isRunning && !kruskalAnimationState.visitedNodes.size}
+                disabled={!kruskalAnimationState.isRunning && !kruskalAnimationState.isComplete}
               >
                 Reset Kruskal's Algorithm
               </button>
