@@ -1786,9 +1786,14 @@ export default function GraphEditor() {
   const startKruskal = () => {
     if (kruskalAnimationState.isRunning) return;
     
-    // Check if graph is weighted
+    // Check if graph is weighted and undirected
     if (!isWeighted) {
       alert('Kruskal\'s algorithm requires a weighted graph. Please switch to weighted mode before starting.');
+      return;
+    }
+
+    if (isDirected) {
+      alert('Kruskal\'s algorithm requires an undirected graph. Please switch to undirected mode before starting.');
       return;
     }
 
@@ -1799,17 +1804,14 @@ export default function GraphEditor() {
     // Sort edges by weight
     const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
 
-    // For directed graphs, we need to track reachability
-    const reachableNodes = new Map();
-    nodes.forEach(node => {
-      reachableNodes.set(node.uniqueId, new Set([node.uniqueId]));
-    });
+    // Get initial components
+    const { nodeToComponent, numComponents } = dsu.getComponents();
 
     setKruskalAnimationState(prev => ({
       ...prev,
       isRunning: true,
       isPaused: false,
-      isComplete: false,
+      isComplete: false, // Add this flag
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
@@ -1818,9 +1820,8 @@ export default function GraphEditor() {
       edgesProcessed: 0,
       sortedEdges,
       currentStep: 0,
-      components: new Map(),
-      numComponents: nodes.length,
-      reachableNodes,
+      components: nodeToComponent,
+      numComponents,
       error: null
     }));
 
@@ -1836,31 +1837,20 @@ export default function GraphEditor() {
       const currentEdge = prev.sortedEdges[prev.currentStep];
       const { source, target, weight } = currentEdge;
 
-      // For directed graphs, check if adding this edge would create a cycle
-      // by checking if target is already reachable from source
-      const sourceReachable = prev.reachableNodes.get(source);
-      const wouldCreateCycle = sourceReachable.has(target);
+      // Check if adding this edge would create a cycle
+      const wouldCreateCycle = dsu.inSameSet(source, target);
       
       let newMSTEdges = new Set(prev.mstEdges);
       let newTotalWeight = prev.totalWeight;
-      let newReachableNodes = new Map(prev.reachableNodes);
       
       if (!wouldCreateCycle) {
-        // Add edge to MST
+        dsu.union(source, target);
         newMSTEdges.add(currentEdge.id);
         newTotalWeight += weight;
-
-        // Update reachability
-        const targetReachable = prev.reachableNodes.get(target);
-        const newReachableFromSource = new Set([...sourceReachable, ...targetReachable]);
-        
-        // Update reachability for all nodes that could reach the source
-        prev.reachableNodes.forEach((reachable, nodeId) => {
-          if (reachable.has(source)) {
-            newReachableNodes.set(nodeId, new Set([...reachable, ...newReachableFromSource]));
-          }
-        });
       }
+
+      // Get updated components
+      const { nodeToComponent, numComponents } = dsu.getComponents();
 
       return {
         ...prev,
@@ -1870,8 +1860,8 @@ export default function GraphEditor() {
         totalWeight: newTotalWeight,
         edgesProcessed: prev.edgesProcessed + 1,
         currentStep: prev.currentStep + 1,
-        reachableNodes: newReachableNodes,
-        numComponents: nodes.length - newMSTEdges.size
+        components: nodeToComponent,
+        numComponents
       };
     });
 
@@ -1883,16 +1873,13 @@ export default function GraphEditor() {
       if (!prev.isPaused && prev.currentStep < prev.sortedEdges.length) {
         runKruskalStep(dsu);
       } else if (prev.currentStep >= prev.sortedEdges.length) {
-        // Check if we have a valid MST (all nodes are reachable from each other)
-        const firstNode = nodes[0]?.uniqueId;
-        const isFullyConnected = firstNode && 
-          prev.reachableNodes.get(firstNode).size === nodes.length;
-        
+        // Check if we have a valid MST (all nodes connected)
+        const isConnected = prev.numComponents === 1;
         return {
           ...prev,
           isRunning: false,
-          isComplete: true,
-          error: isFullyConnected ? null : "Graph is not strongly connected. Forest of directed MSTs generated."
+          isComplete: true, // Set this to true when algorithm completes
+          error: isConnected ? null : "Graph is disconnected. Forest of MSTs generated."
         };
       }
       return prev;
@@ -2769,8 +2756,9 @@ export default function GraphEditor() {
               <button 
                 className="btn btn-primary"
                 onClick={startKruskal}
-                disabled={kruskalAnimationState.isRunning || !isWeighted}
-                title={!isWeighted ? "Kruskal's algorithm requires a weighted graph" : ""}
+                disabled={kruskalAnimationState.isRunning || !isWeighted || isDirected}
+                title={!isWeighted ? "Kruskal's algorithm requires a weighted graph" : 
+                       isDirected ? "Kruskal's algorithm requires an undirected graph" : ""}
               >
                 Start Kruskal's Algorithm
               </button>
