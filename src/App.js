@@ -1276,7 +1276,7 @@ export default function GraphEditor() {
     );
 
     return (
-      <g key={edge.id} className="edge">
+      <g key={edge.id} className="edge" onClick={(e) => handleEdgeClick(edge, e)}>
         <path
           d={getEdgePath(
             sourceNode.x, 
@@ -1287,7 +1287,8 @@ export default function GraphEditor() {
           )}
           stroke={getEdgeStyle(edge)}
           strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-          markerEnd="url(#arrowhead)"
+          markerEnd="url(#arrowhead-with-background)"
+          fill="none"
         />
         {isWeighted && (
           <text 
@@ -1417,7 +1418,21 @@ export default function GraphEditor() {
                 markerHeight="8"
                 orient="auto"
               >
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="black"/>
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={getEdgeStyle(edge)} />
+              </marker>
+              
+              // Add a white background to the arrowhead to prevent overlap
+              <marker
+                id="arrowhead-with-background"
+                viewBox="0 0 12 12"
+                refX="20"
+                refY="6"
+                markerWidth="8"
+                markerHeight="8"
+                orient="auto"
+              >
+                <path d="M 0 0 L 12 6 L 0 12 z" fill="white" />
+                <path d="M 1 1 L 11 6 L 1 11 z" fill={getEdgeStyle(edge)} />
               </marker>
             </defs>
 
@@ -1457,7 +1472,8 @@ export default function GraphEditor() {
                     )}
                     stroke={getEdgeStyle(edge)}
                     strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-                    markerEnd="url(#arrowhead)"
+                    markerEnd="url(#arrowhead-with-background)"
+                    fill="none"
                   />
                   {isWeighted && (
                     <text 
