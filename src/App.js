@@ -779,14 +779,14 @@ export default function GraphEditor() {
 
     // Dijkstra's algorithm states
     if (dijkstraAnimationState.isRunning || dijkstraAnimationState.visitedNodes.size > 0) {
-      // Source node is always gold
+      // Source node is always orange
       if (dijkstraAnimationState.sourceNode === node.uniqueId) {
-        return "#FFD700";
+        return "#ff8c00";
       }
       
-      // Current node being processed is orange
+      // Current node being processed is yellow
       if (dijkstraAnimationState.currentNode === node.uniqueId) {
-        return "#ff8c00";
+        return "#FFD700";
       }
       
       // Processed nodes are green
@@ -1382,19 +1382,18 @@ export default function GraphEditor() {
       }
     }
     else if (dijkstraAnimationState.isRunning) {
-      // Edge being currently evaluated
-      if (dijkstraAnimationState.currentEdge === edge.id) {
-        return "#ff8c00"; // Orange for current edge
-      }
-      
-      // Edge that has been relaxed (improved the distance)
-      if (dijkstraAnimationState.relaxedEdges.has(edge.id)) {
-        return "#90EE90"; // Light green for relaxed edges
-      }
-      
-      // Edge that has been visited but not relaxed
-      if (dijkstraAnimationState.visitedEdges.has(edge.id)) {
-        return "#ddd"; // Light gray for visited edges
+      // Only highlight edges connected to the current node
+      if (edge.source === dijkstraAnimationState.currentNode || 
+          (!isDirected && edge.target === dijkstraAnimationState.currentNode)) {
+        // Edge that has been relaxed (improved the distance)
+        if (dijkstraAnimationState.relaxedEdges.has(edge.id)) {
+          return "#90EE90"; // Light green for relaxed edges
+        }
+        
+        // Edge that has been visited but not relaxed
+        if (dijkstraAnimationState.visitedEdges.has(edge.id)) {
+          return "#ddd"; // Light gray for visited edges
+        }
       }
     }
     
