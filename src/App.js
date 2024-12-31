@@ -94,6 +94,23 @@ export default function GraphEditor() {
     iterationCount: 0,
   });
 
+  // Add Prim's algorithm state
+  const [primAnimationState, setPrimAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    currentNode: null,
+    sourceNode: null,
+    priorityQueue: [], // Array of [edgeId, weight] pairs
+    processedNodes: new Set(),
+    currentEdge: null,
+    mstEdges: new Set(),
+    totalWeight: 0,
+    iterationCount: 0,
+    error: null
+  });
+
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
   // Add a ref for unique edge IDs
@@ -229,6 +246,8 @@ export default function GraphEditor() {
       initializeBellmanFord(nodeId);
     } else if (mode === 'dijkstra') {
       initializeDijkstra(nodeId);
+    } else if (mode === 'prim') {
+      initializePrim(nodeId);
     }
   };
 
@@ -333,6 +352,8 @@ export default function GraphEditor() {
     resetDFS();
     resetTimedDFS();
     resetBellmanFord();
+    resetDijkstra();
+    resetPrim();
   };
 
   // Add function to handle directed/undirected toggle
@@ -535,7 +556,7 @@ export default function GraphEditor() {
   const getAnimationDelay = () => {
     // Convert slider value (1-100) to delay (1500ms - 100ms)
     // Reversed so that higher slider value = faster animation
-    return 2400 - (animationSpeed * 15);
+    return 3600 - (animationSpeed * 15);
   };
 
   const runBFSStep = async () => {
@@ -796,6 +817,33 @@ export default function GraphEditor() {
       
       // Nodes in priority queue are light orange
       if (dijkstraAnimationState.priorityQueue.some(([id]) => id === node.uniqueId)) {
+        return "#FFE4B5";
+      }
+    }
+
+    // Prim's algorithm states
+    if (primAnimationState.isRunning || primAnimationState.visitedNodes.size > 0) {
+      // Source node is always orange
+      if (primAnimationState.sourceNode === node.uniqueId) {
+        return "#ff8c00";
+      }
+      
+      // Current node being processed is yellow
+      if (primAnimationState.currentNode === node.uniqueId) {
+        return "#FFD700";
+      }
+      
+      // Nodes in MST are green
+      if (primAnimationState.processedNodes.has(node.uniqueId)) {
+        return "#90EE90";
+      }
+      
+      // Nodes adjacent to MST (candidates) are light orange
+      const isCandidate = primAnimationState.priorityQueue.some(([edgeId]) => {
+        const edge = edges.find(e => e.id === edgeId);
+        return edge && (edge.source === node.uniqueId || edge.target === node.uniqueId);
+      });
+      if (isCandidate) {
         return "#FFE4B5";
       }
     }
@@ -1191,6 +1239,12 @@ export default function GraphEditor() {
   const startDijkstra = () => {
     if (dijkstraAnimationState.isRunning) return;
     
+    // Check if graph is undirected
+    if (!isDirected) {
+      alert('Dijkstra\'s algorithm requires a directed graph. Please switch to directed mode before starting.');
+      return;
+    }
+    
     // Check for negative weights
     const hasNegativeWeights = edges.some(edge => edge.weight < 0);
     if (hasNegativeWeights) {
@@ -1396,8 +1450,199 @@ export default function GraphEditor() {
         }
       }
     }
+    // Prim's algorithm styling
+    else if (primAnimationState.isRunning || primAnimationState.visitedNodes.size > 0) {
+      // Edge is part of the MST
+      if (primAnimationState.mstEdges.has(edge.id)) {
+        return "#90EE90"; // Light green for MST edges
+      }
+      
+      // Current edge being evaluated
+      if (primAnimationState.currentEdge === edge.id) {
+        return "#ff4500"; // Red-orange for current candidate edge
+      }
+      
+      // Edge that has been visited but not added to MST
+      if (primAnimationState.visitedEdges.has(edge.id)) {
+        return "#ddd"; // Light gray for visited edges
+      }
+    }
     
     return "#999"; // Default edge color
+  };
+
+  // Add Prim's algorithm functions
+  const startPrim = () => {
+    if (primAnimationState.isRunning) return;
+    
+    // Check if graph is weighted
+    if (!isWeighted) {
+      alert('Prim\'s algorithm requires a weighted graph. Please switch to weighted mode before starting.');
+      return;
+    }
+    
+    // Prompt user to select source node
+    setMode('prim');
+    alert('Click a node to start Prim\'s algorithm');
+  };
+
+  const initializePrim = (sourceNodeId) => {
+    const sourceNode = nodes.find(n => n.id === sourceNodeId);
+    if (!sourceNode) return;
+    
+    // Initialize priority queue with edges from source node
+    const initialPriorityQueue = [];
+    const currentNodeId = nodes.find(n => n.uniqueId === sourceNode.uniqueId).id;
+    const adjList = getAdjacencyList();
+    
+    adjList[currentNodeId].forEach(({ node: neighborId, weight }) => {
+      const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
+      if (!neighborUniqueId) return;
+
+      const edge = edges.find(e => 
+        (e.source === sourceNode.uniqueId && e.target === neighborUniqueId) ||
+        (!isDirected && e.source === neighborUniqueId && e.target === sourceNode.uniqueId)
+      );
+      
+      if (edge) {
+        initialPriorityQueue.push([edge.id, weight]);
+      }
+    });
+
+    setPrimAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set([sourceNode.uniqueId]),
+      visitedEdges: new Set(),
+      currentNode: sourceNode.uniqueId,
+      sourceNode: sourceNode.uniqueId,
+      priorityQueue: initialPriorityQueue,
+      processedNodes: new Set([sourceNode.uniqueId]),
+      currentEdge: null,
+      mstEdges: new Set(),
+      totalWeight: 0,
+      iterationCount: 0,
+      error: null
+    }));
+
+    runPrimStep();
+  };
+
+  const runPrimStep = async () => {
+    setPrimAnimationState(prev => {
+      if (prev.isPaused || prev.priorityQueue.length === 0) {
+        return prev;
+      }
+
+      // Sort priority queue by weight
+      prev.priorityQueue.sort((a, b) => a[1] - b[1]);
+      
+      // Get edge with minimum weight
+      const [currentEdgeId, weight] = prev.priorityQueue.shift();
+      const currentEdge = edges.find(e => e.id === currentEdgeId);
+      
+      if (!currentEdge) return prev;
+
+      // Determine which node is new (not in MST)
+      const sourceInMST = prev.processedNodes.has(currentEdge.source);
+      const targetInMST = prev.processedNodes.has(currentEdge.target);
+      
+      // Skip if both nodes are already in MST
+      if (sourceInMST && targetInMST) {
+        return {
+          ...prev,
+          iterationCount: prev.iterationCount + 1
+        };
+      }
+
+      // Get the new node to add to MST
+      const newNode = sourceInMST ? currentEdge.target : currentEdge.source;
+      
+      // Add edge to MST
+      const newMSTEdges = new Set(prev.mstEdges);
+      newMSTEdges.add(currentEdgeId);
+
+      // Add new node to processed nodes
+      const newProcessedNodes = new Set(prev.processedNodes);
+      newProcessedNodes.add(newNode);
+
+      // Get new edges to add to priority queue
+      const newNodeId = nodes.find(n => n.uniqueId === newNode)?.id;
+      const adjList = getAdjacencyList();
+      const newPriorityQueue = [...prev.priorityQueue];
+
+      if (adjList[newNodeId]) {
+        adjList[newNodeId].forEach(({ node: neighborId, weight }) => {
+          const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
+          if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
+
+          const edge = edges.find(e => 
+            (e.source === newNode && e.target === neighborUniqueId) ||
+            (!isDirected && e.source === neighborUniqueId && e.target === newNode)
+          );
+          
+          if (edge) {
+            newPriorityQueue.push([edge.id, weight]);
+          }
+        });
+      }
+
+      return {
+        ...prev,
+        currentNode: newNode,
+        priorityQueue: newPriorityQueue,
+        processedNodes: newProcessedNodes,
+        visitedEdges: new Set([...prev.visitedEdges, currentEdgeId]),
+        mstEdges: newMSTEdges,
+        totalWeight: prev.totalWeight + weight,
+        currentEdge: currentEdgeId,
+        iterationCount: prev.iterationCount + 1,
+        error: newProcessedNodes.size < nodes.length && newPriorityQueue.length === 0 ? 
+          "Graph is disconnected. Cannot construct complete MST." : null
+      };
+    });
+
+    // Add a small delay to make the animation more visible
+    await new Promise(resolve => setTimeout(resolve, getAnimationDelay()));
+
+    // Continue if still running
+    setPrimAnimationState(prev => {
+      if (!prev.isPaused && prev.priorityQueue.length > 0) {
+        runPrimStep();
+      } else if (prev.priorityQueue.length === 0) {
+        return { ...prev, isRunning: false };
+      }
+      return prev;
+    });
+  };
+
+  const togglePausePrim = () => {
+    setPrimAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.priorityQueue.length > 0) {
+        runPrimStep();
+      }
+      return newState;
+    });
+  };
+
+  const resetPrim = () => {
+    setPrimAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      currentNode: null,
+      sourceNode: null,
+      priorityQueue: [],
+      processedNodes: new Set(),
+      currentEdge: null,
+      mstEdges: new Set(),
+      totalWeight: 0,
+      iterationCount: 0,
+      error: null
+    });
   };
 
   return (
@@ -1955,6 +2200,39 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {/* Add Prim's algorithm status display */}
+          {(primAnimationState.isRunning || primAnimationState.visitedNodes.size > 0) && (
+            <div className="prim-status-container">
+              <h3>Prim's Algorithm Status</h3>
+              <div className="prim-status">
+                <div className="current-state">
+                  <strong>Iterations completed:</strong> {primAnimationState.iterationCount || 0}
+                </div>
+                
+                <div className="mst-edges-section">
+                  <strong>MST Edges:</strong>
+                  <div className="mst-edges-visualization">
+                    {Array.from(primAnimationState.mstEdges).map((edgeId, index) => (
+                      <div key={index} className="edge-item">
+                        (v{edges.find(e => e.id === edgeId)?.source} → v{edges.find(e => e.id === edgeId)?.target})
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="total-weight-section">
+                  <strong>Total Weight:</strong> {primAnimationState.totalWeight || 0}
+                </div>
+
+                {!primAnimationState.isRunning && primAnimationState.visitedNodes.size > 0 && (
+                  <div className={`algorithm-result ${primAnimationState.error ? 'invalid' : 'valid'}`}>
+                    {primAnimationState.error ? "Graph is disconnected. Cannot construct complete MST." : "MST found successfully"}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -2083,7 +2361,8 @@ export default function GraphEditor() {
               <button 
                 className="btn btn-primary"
                 onClick={startDijkstra}
-                disabled={dijkstraAnimationState.isRunning}
+                disabled={dijkstraAnimationState.isRunning || !isDirected}
+                title={!isDirected ? "Dijkstra's algorithm requires a directed graph" : ""}
               >
                 Start Dijkstra's Algorithm
               </button>
@@ -2100,6 +2379,34 @@ export default function GraphEditor() {
                 disabled={!dijkstraAnimationState.isRunning && !dijkstraAnimationState.visitedNodes.size}
               >
                 Reset Dijkstra's Algorithm
+              </button>
+            </div>
+          </div>
+
+          <div className="algorithm-section">
+            <h3>Prim's Algorithm</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={startPrim}
+                disabled={primAnimationState.isRunning || !isWeighted}
+                title={!isWeighted ? "Prim's algorithm requires a weighted graph" : ""}
+              >
+                Start Prim's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePausePrim}
+                disabled={!primAnimationState.isRunning}
+              >
+                {primAnimationState.isPaused ? 'Resume' : 'Pause'} Prim's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetPrim}
+                disabled={!primAnimationState.isRunning && !primAnimationState.visitedNodes.size}
+              >
+                Reset Prim's Algorithm
               </button>
             </div>
           </div>

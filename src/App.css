@@ -891,3 +891,72 @@ body {
     text-align: center;
   }
 }
+
+/* Add Prim's algorithm specific styles */
+.prim-status-container {
+  width: 100%;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.mst-edges-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+}
+
+.mst-edges-visualization {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+.mst-edges-visualization .edge-item {
+  background: var(--primary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  color: white;
+  font-size: 0.9rem;
+  font-family: monospace;
+}
+
+.total-weight-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Animation styles for Prim's algorithm */
+.prim-status .mst-edges-visualization {
+  transition: all 0.3s ease;
+}
+
+.prim-status .mst-edges-visualization .edge-item {
+  transition: transform 0.3s ease;
+}
+
+.prim-status .mst-edges-visualization .edge-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Responsive styles for Prim's algorithm */
+@media (max-width: 768px) {
+  .mst-edges-visualization {
+    flex-direction: column;
+  }
+  
+  .mst-edges-visualization .edge-item {
+    width: 100%;
+    text-align: center;
+  }
+}
