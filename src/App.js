@@ -73,7 +73,8 @@ export default function GraphEditor() {
     iteration: 0,
     edgeOrder: [],
     hasNegativeCycle: false,
-    currentStep: 0
+    currentStep: 0,
+    showShortestPaths: false,
   });
 
   // A ref to keep track of the next node id
@@ -1038,12 +1039,15 @@ export default function GraphEditor() {
       // Check if we've completed current iteration
       if (prev.currentStep % edges.length === 0 && prev.currentStep > 0) {
         if (!prev.anyChanges) {
+          // Algorithm has completed successfully
           return {
             ...prev,
             isRunning: false,
             hasNegativeCycle: false,
-            currentEdge: null, // Clear current edge
-            iterationCount: Math.floor(prev.currentStep / edges.length)
+            currentEdge: null,
+            iterationCount: Math.floor(prev.currentStep / edges.length),
+            // Keep predecessors and distances in final state for path highlighting
+            showShortestPaths: true // Add this flag
           };
         }
         prev.anyChanges = false;
@@ -1129,7 +1133,8 @@ export default function GraphEditor() {
       iteration: 0,
       edgeOrder: [],
       hasNegativeCycle: false,
-      currentStep: 0
+      currentStep: 0,
+      showShortestPaths: false
     });
   };
 

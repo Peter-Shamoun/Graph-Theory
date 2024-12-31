@@ -805,3 +805,14 @@ body {
 [data-directed="true"] #arrowhead-with-background {
   display: block;
 }
+
+/* Add styles for shortest path edges */
+.edge.shortest-path path {
+  stroke: #90EE90;
+  stroke-width: 3px;
+}
+
+/* Update marker styles for shortest path edges */
+.edge.shortest-path marker path {
+  fill: #90EE90;
+}
