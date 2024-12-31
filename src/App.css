@@ -25,12 +25,12 @@ body {
 
 .graph-editor {
   max-width: none;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   padding: 0 1rem;
 }
 
 .graph-editor__header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
