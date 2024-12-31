@@ -973,6 +973,12 @@ export default function GraphEditor() {
   const startBellmanFord = () => {
     if (bellmanFordAnimationState.isRunning) return;
     
+    // Check if the graph is directed
+    if (!isDirected) {
+      alert('Bellman-Ford algorithm requires a directed graph. Please switch to directed mode before starting.');
+      return;
+    }
+    
     // Prompt user to select source node
     setMode('bellman_ford');
     alert('Click a node to start Bellman-Ford algorithm');
