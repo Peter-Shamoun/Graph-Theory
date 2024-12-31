@@ -1531,8 +1531,22 @@ export default function GraphEditor() {
 
   const runPrimStep = async () => {
     setPrimAnimationState(prev => {
-      if (prev.isPaused || prev.priorityQueue.length === 0) {
+      if (prev.isPaused) {
         return prev;
+      }
+
+      // Check if we've included all nodes or if we can't proceed
+      if (prev.processedNodes.size === nodes.length) {
+        return { ...prev, isRunning: false };
+      }
+
+      // If priority queue is empty but we haven't processed all nodes, graph is disconnected
+      if (prev.priorityQueue.length === 0) {
+        return {
+          ...prev,
+          isRunning: false,
+          error: "Graph is disconnected. Cannot construct complete MST."
+        };
       }
 
       // Sort priority queue by weight
@@ -1594,9 +1608,7 @@ export default function GraphEditor() {
         mstEdges: newMSTEdges,
         totalWeight: prev.totalWeight + weight,
         currentEdge: currentEdgeId,
-        iterationCount: prev.iterationCount + 1,
-        error: newProcessedNodes.size < nodes.length && newPriorityQueue.length === 0 ? 
-          "Graph is disconnected. Cannot construct complete MST." : null
+        iterationCount: prev.iterationCount + 1
       };
     });
 
@@ -1605,10 +1617,8 @@ export default function GraphEditor() {
 
     // Continue if still running
     setPrimAnimationState(prev => {
-      if (!prev.isPaused && prev.priorityQueue.length > 0) {
+      if (!prev.isPaused && prev.isRunning) {
         runPrimStep();
-      } else if (prev.priorityQueue.length === 0) {
-        return { ...prev, isRunning: false };
       }
       return prev;
     });
