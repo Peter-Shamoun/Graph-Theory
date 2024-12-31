@@ -2644,7 +2644,7 @@ export default function GraphEditor() {
                 className="btn btn-primary"
                 onClick={() => {
                   setMode('timed_dfs');
-                  alert('Click a node to start Timed DFS');
+                  alert('Click a node to start Topological Sort');
                 }}
                 disabled={timedDfsAnimationState.isRunning}
               >
@@ -2700,7 +2700,7 @@ export default function GraphEditor() {
               <button 
                 className="btn btn-primary"
                 onClick={startDijkstra}
-                disabled={dijkstraAnimationState.isRunning || !isDirected}
+                disabled={dijkstraAnimationState.isRunning || nodes.length === 0}
                 title={!isDirected ? "Dijkstra's algorithm requires a directed graph" : ""}
               >
                 Start Dijkstra's Algorithm
