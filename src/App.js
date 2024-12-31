@@ -1923,7 +1923,7 @@ export default function GraphEditor() {
   return (
     <div className="graph-editor">
       <header className="graph-editor__header">
-        <h1 className="graph-editor__title">Graph Editor</h1>
+        <h1 className="graph-editor__title">Graph Theory</h1>
       </header>
 
       <div className="graph-editor__controls">
@@ -1990,7 +1990,15 @@ export default function GraphEditor() {
                 min="1"
                 max="100"
                 value={animationSpeed}
-                onChange={(e) => setAnimationSpeed(parseInt(e.target.value))}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setAnimationSpeed(value);
+                  // Update the background gradient
+                  e.target.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${value}%, var(--background) ${value}%, var(--background) 100%)`;
+                }}
+                style={{
+                  background: `linear-gradient(to right, var(--primary) 0%, var(--primary) ${animationSpeed}%, var(--background) ${animationSpeed}%, var(--background) 100%)`
+                }}
                 disabled={bfsAnimationState.isRunning && !bfsAnimationState.isPaused}
               />
               <span>{animationSpeed}%</span>
