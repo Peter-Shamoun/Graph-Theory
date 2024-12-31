@@ -1235,19 +1235,30 @@ export default function GraphEditor() {
 
   // Add this function to handle edge styling
   const getEdgeStyle = (edge) => {
-    if (bellmanFordAnimationState.isRunning) {
+    // After algorithm completion, highlight shortest path edges
+    if (!bellmanFordAnimationState.isRunning && bellmanFordAnimationState.visitedNodes.size > 0) {
+      // Check if this edge represents a final shortest path
+      const targetNode = edge.target;
+      const predecessorNode = bellmanFordAnimationState.predecessors[targetNode];
+      if (predecessorNode === edge.source) {
+        return "#90EE90"; // Light green for shortest path edges
+      }
+    }
+    // During algorithm execution
+    else if (bellmanFordAnimationState.isRunning) {
       // Current edge being evaluated
       if (bellmanFordAnimationState.currentEdge === edge.id) {
         return "#ff8c00"; // Orange for current edge
       }
       
-      // Check if this edge represents a predecessor relationship
+      // Check if this edge represents a current shortest path
       const targetNode = edge.target;
       const predecessorNode = bellmanFordAnimationState.predecessors[targetNode];
       if (predecessorNode === edge.source) {
         return "#90EE90"; // Light green for predecessor edges
       }
     }
+    
     return "#999"; // Default edge color
   };
 
