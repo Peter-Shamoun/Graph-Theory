@@ -777,6 +777,29 @@ export default function GraphEditor() {
       }
     }
 
+    // Dijkstra's algorithm states
+    if (dijkstraAnimationState.isRunning || dijkstraAnimationState.visitedNodes.size > 0) {
+      // Source node is always gold
+      if (dijkstraAnimationState.sourceNode === node.uniqueId) {
+        return "#FFD700";
+      }
+      
+      // Current node being processed is orange
+      if (dijkstraAnimationState.currentNode === node.uniqueId) {
+        return "#ff8c00";
+      }
+      
+      // Processed nodes are green
+      if (dijkstraAnimationState.processedNodes.has(node.uniqueId)) {
+        return "#90EE90";
+      }
+      
+      // Nodes in priority queue are light orange
+      if (dijkstraAnimationState.priorityQueue.some(([id]) => id === node.uniqueId)) {
+        return "#FFE4B5";
+      }
+    }
+
     // Other algorithm states remain the same
     if (bfsAnimationState.currentNode === node.uniqueId) return "#ff8c00";
     if (dfsAnimationState.currentNode === node.uniqueId || 
@@ -1252,18 +1275,21 @@ export default function GraphEditor() {
         const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
         if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
 
+        // Only add edges connected to the current node being processed
         const edge = edges.find(e => 
           (e.source === currentNode && e.target === neighborUniqueId) ||
           (!isDirected && e.source === neighborUniqueId && e.target === currentNode)
         );
-        if (edge) newVisitedEdges.add(edge.id);
-
-        const newDistance = prev.distances[currentNode] + weight;
-        if (newDistance < prev.distances[neighborUniqueId]) {
-          newDistances[neighborUniqueId] = newDistance;
-          newPredecessors[neighborUniqueId] = currentNode;
-          newPriorityQueue.push([neighborUniqueId, newDistance]);
-          if (edge) newRelaxedEdges.add(edge.id);
+        
+        if (edge) {
+          newVisitedEdges.add(edge.id);
+          const newDistance = prev.distances[currentNode] + weight;
+          if (newDistance < prev.distances[neighborUniqueId]) {
+            newDistances[neighborUniqueId] = newDistance;
+            newPredecessors[neighborUniqueId] = currentNode;
+            newPriorityQueue.push([neighborUniqueId, newDistance]);
+            newRelaxedEdges.add(edge.id);
+          }
         }
       });
 
