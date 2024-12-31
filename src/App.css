@@ -795,3 +795,13 @@ body {
   fill: none;
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
+
+/* Update marker styles */
+#arrowhead-with-background {
+  display: none; /* Hide by default */
+}
+
+/* Only show markers when the graph is directed */
+[data-directed="true"] #arrowhead-with-background {
+  display: block;
+}

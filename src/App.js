@@ -390,12 +390,6 @@ export default function GraphEditor() {
     return adjacencyList;
   };
 
-  // // Example usage for algorithms
-  // const runDijkstra = (startNodeId) => {
-  //   const graph = getAdjacencyList();
-  //   // Now you can run Dijkstra's algorithm using this format
-  //   // ...
-  // };
 
   // Add new mode setter
   const setModeDrag = () => {
@@ -1410,6 +1404,7 @@ export default function GraphEditor() {
             className="graph-canvas"
             width="100%"
             height="600"
+            data-directed={isDirected}
             onClick={handleSvgClick}
           >
             <defs>
