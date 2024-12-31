@@ -1288,7 +1288,7 @@ export default function GraphEditor() {
           )}
           stroke={edgeColor}
           strokeWidth={edge.id === bellmanFordAnimationState.currentEdge ? "3" : "2"}
-          markerEnd={`url(#arrowhead-with-background)`}
+          markerEnd={isDirected ? `url(#arrowhead-with-background)` : undefined}
           style={{
             '--marker-color': edgeColor
           }}
