@@ -111,6 +111,98 @@ export default function GraphEditor() {
     error: null
   });
 
+  // Add Kruskal's algorithm state
+  const [kruskalAnimationState, setKruskalAnimationState] = useState({
+    isRunning: false,
+    isPaused: false,
+    visitedNodes: new Set(),
+    visitedEdges: new Set(),
+    currentEdge: null,
+    mstEdges: new Set(),
+    totalWeight: 0,
+    edgesProcessed: 0,
+    sortedEdges: [],
+    currentStep: 0,
+    components: new Map(), // Maps node uniqueId to component id
+    numComponents: 0,
+    error: null
+  });
+
+  // DisjointSet class for Kruskal's algorithm
+  class DisjointSet {
+    constructor() {
+      this.parent = new Map();
+      this.rank = new Map();
+    }
+
+    makeSet(x) {
+      this.parent.set(x, x);
+      this.rank.set(x, 0);
+    }
+
+    find(x) {
+      if (!this.parent.has(x)) {
+        this.makeSet(x);
+      }
+      if (this.parent.get(x) !== x) {
+        this.parent.set(x, this.find(this.parent.get(x))); // Path compression
+      }
+      return this.parent.get(x);
+    }
+
+    union(x, y) {
+      const rootX = this.find(x);
+      const rootY = this.find(y);
+
+      if (rootX !== rootY) {
+        // Union by rank
+        if (this.rank.get(rootX) < this.rank.get(rootY)) {
+          this.parent.set(rootX, rootY);
+        } else if (this.rank.get(rootX) > this.rank.get(rootY)) {
+          this.parent.set(rootY, rootX);
+        } else {
+          this.parent.set(rootY, rootX);
+          this.rank.set(rootX, this.rank.get(rootX) + 1);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    inSameSet(x, y) {
+      return this.find(x) === this.find(y);
+    }
+
+    getComponents() {
+      const components = new Map();
+      let componentCount = 0;
+      const componentSizes = new Map();
+
+      // First pass: assign components
+      for (const x of this.parent.keys()) {
+        const root = this.find(x);
+        if (!components.has(root)) {
+          components.set(root, componentCount++);
+          componentSizes.set(root, 0);
+        }
+        componentSizes.set(root, componentSizes.get(root) + 1);
+      }
+
+      // Second pass: map each node to its component
+      const nodeToComponent = new Map();
+      for (const x of this.parent.keys()) {
+        const root = this.find(x);
+        nodeToComponent.set(x, components.get(root));
+      }
+
+      return {
+        nodeToComponent,
+        numComponents: componentCount,
+        componentSizes
+      };
+    }
+  }
+
   // A ref to keep track of the next node id
   const nextNodeId = useRef(0);
   // Add a ref for unique edge IDs
@@ -1467,6 +1559,23 @@ export default function GraphEditor() {
         return "#ddd"; // Light gray for visited edges
       }
     }
+    // Kruskal's algorithm styling
+    else if (kruskalAnimationState.isRunning || kruskalAnimationState.visitedNodes.size > 0) {
+      // Edge is part of the MST
+      if (kruskalAnimationState.mstEdges.has(edge.id)) {
+        return "#90EE90"; // Light green for MST edges
+      }
+      
+      // Current edge being evaluated
+      if (kruskalAnimationState.currentEdge === edge.id) {
+        return "#ff4500"; // Red-orange for current candidate edge
+      }
+      
+      // Edge that has been visited but not added to MST
+      if (kruskalAnimationState.visitedEdges.has(edge.id)) {
+        return "#ddd"; // Light gray for visited edges
+      }
+    }
     
     return "#999"; // Default edge color
   };
@@ -1668,6 +1777,139 @@ export default function GraphEditor() {
       mstEdges: new Set(),
       totalWeight: 0,
       iterationCount: 0,
+      error: null
+    });
+  };
+
+  const startKruskal = () => {
+    if (kruskalAnimationState.isRunning) return;
+    
+    // Check if graph is weighted
+    if (!isWeighted) {
+      alert('Kruskal\'s algorithm requires a weighted graph. Please switch to weighted mode before starting.');
+      return;
+    }
+
+    // Initialize algorithm
+    const dsu = new DisjointSet();
+    nodes.forEach(node => dsu.makeSet(node.uniqueId));
+
+    // Sort edges by weight
+    const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+
+    // Get initial components
+    const { nodeToComponent, numComponents } = dsu.getComponents();
+
+    setKruskalAnimationState(prev => ({
+      ...prev,
+      isRunning: true,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      currentEdge: null,
+      mstEdges: new Set(),
+      totalWeight: 0,
+      edgesProcessed: 0,
+      sortedEdges,
+      currentStep: 0,
+      components: nodeToComponent,
+      numComponents,
+      error: null
+    }));
+
+    runKruskalStep(dsu);
+  };
+
+  const runKruskalStep = async (dsu) => {
+    setKruskalAnimationState(prev => {
+      if (prev.isPaused || prev.currentStep >= prev.sortedEdges.length) {
+        return prev;
+      }
+
+      const currentEdge = prev.sortedEdges[prev.currentStep];
+      const { source, target, weight } = currentEdge;
+
+      // Check if adding this edge would create a cycle
+      const wouldCreateCycle = dsu.inSameSet(source, target);
+      
+      let newMSTEdges = new Set(prev.mstEdges);
+      let newTotalWeight = prev.totalWeight;
+      
+      if (!wouldCreateCycle) {
+        dsu.union(source, target);
+        newMSTEdges.add(currentEdge.id);
+        newTotalWeight += weight;
+      }
+
+      // Get updated components
+      const { nodeToComponent, numComponents } = dsu.getComponents();
+
+      return {
+        ...prev,
+        currentEdge: currentEdge.id,
+        visitedEdges: new Set([...prev.visitedEdges, currentEdge.id]),
+        mstEdges: newMSTEdges,
+        totalWeight: newTotalWeight,
+        edgesProcessed: prev.edgesProcessed + 1,
+        currentStep: prev.currentStep + 1,
+        components: nodeToComponent,
+        numComponents
+      };
+    });
+
+    // Add a small delay to make the animation more visible
+    await new Promise(resolve => setTimeout(resolve, getAnimationDelay()));
+
+    // Continue if still running
+    setKruskalAnimationState(prev => {
+      if (!prev.isPaused && prev.currentStep < prev.sortedEdges.length) {
+        runKruskalStep(dsu);
+      } else if (prev.currentStep >= prev.sortedEdges.length) {
+        // Check if we have a valid MST (all nodes connected)
+        const isConnected = prev.numComponents === 1;
+        return {
+          ...prev,
+          isRunning: false,
+          error: isConnected ? null : "Graph is disconnected. Forest of MSTs generated."
+        };
+      }
+      return prev;
+    });
+  };
+
+  const togglePauseKruskal = () => {
+    setKruskalAnimationState(prev => {
+      const newState = { ...prev, isPaused: !prev.isPaused };
+      if (!newState.isPaused && newState.currentStep < newState.sortedEdges.length) {
+        const dsu = new DisjointSet();
+        nodes.forEach(node => dsu.makeSet(node.uniqueId));
+        // Reconstruct DSU state
+        Array.from(newState.mstEdges).forEach(edgeId => {
+          const edge = edges.find(e => e.id === edgeId);
+          if (edge) {
+            dsu.union(edge.source, edge.target);
+          }
+        });
+        runKruskalStep(dsu);
+      }
+      return newState;
+    });
+  };
+
+  const resetKruskal = () => {
+    setKruskalAnimationState({
+      isRunning: false,
+      isPaused: false,
+      visitedNodes: new Set(),
+      visitedEdges: new Set(),
+      currentEdge: null,
+      mstEdges: new Set(),
+      totalWeight: 0,
+      edgesProcessed: 0,
+      sortedEdges: [],
+      currentStep: 0,
+      components: new Map(),
+      numComponents: 0,
       error: null
     });
   };
@@ -2267,6 +2509,50 @@ export default function GraphEditor() {
               </div>
             </div>
           )}
+
+          {/* Add Kruskal's algorithm status display */}
+          {(kruskalAnimationState.isRunning || kruskalAnimationState.visitedNodes.size > 0) && (
+            <div className="kruskal-status-container">
+              <h3>Kruskal's Algorithm Status</h3>
+              <div className="kruskal-status">
+                <div className="current-state">
+                  <strong>Edges Processed:</strong> {kruskalAnimationState.edgesProcessed} / {edges.length}
+                </div>
+                
+                <div className="mst-edges-section">
+                  <strong>MST Edges:</strong>
+                  <div className="mst-edges-visualization">
+                    {Array.from(kruskalAnimationState.mstEdges).map((edgeId, index) => {
+                      const edge = edges.find(e => e.id === edgeId);
+                      if (!edge) return null;
+                      const sourceNode = nodes.find(n => n.uniqueId === edge.source);
+                      const targetNode = nodes.find(n => n.uniqueId === edge.target);
+                      if (!sourceNode || !targetNode) return null;
+                      return (
+                        <div key={index} className="edge-item">
+                          ({sourceNode.id} → {targetNode.id}, weight: {edge.weight})
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="total-weight-section">
+                  <strong>Total MST Weight:</strong> {kruskalAnimationState.totalWeight}
+                </div>
+
+                <div className="components-section">
+                  <strong>Connected Components:</strong> {kruskalAnimationState.numComponents}
+                </div>
+
+                {!kruskalAnimationState.isRunning && kruskalAnimationState.visitedNodes.size > 0 && (
+                  <div className={`algorithm-result ${kruskalAnimationState.error ? 'invalid' : 'valid'}`}>
+                    {kruskalAnimationState.error || "MST found successfully"}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="algorithm-container">
@@ -2441,6 +2727,34 @@ export default function GraphEditor() {
                 disabled={!primAnimationState.isRunning && !primAnimationState.visitedNodes.size}
               >
                 Reset Prim's Algorithm
+              </button>
+            </div>
+          </div>
+
+          <div className="algorithm-section">
+            <h3>Kruskal's Algorithm</h3>
+            <div className="algorithm-controls">
+              <button 
+                className="btn btn-primary"
+                onClick={startKruskal}
+                disabled={kruskalAnimationState.isRunning || !isWeighted}
+                title={!isWeighted ? "Kruskal's algorithm requires a weighted graph" : ""}
+              >
+                Start Kruskal's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={togglePauseKruskal}
+                disabled={!kruskalAnimationState.isRunning}
+              >
+                {kruskalAnimationState.isPaused ? 'Resume' : 'Pause'} Kruskal's Algorithm
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={resetKruskal}
+                disabled={!kruskalAnimationState.isRunning && !kruskalAnimationState.visitedNodes.size}
+              >
+                Reset Kruskal's Algorithm
               </button>
             </div>
           </div>

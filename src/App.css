@@ -960,3 +960,56 @@ body {
     text-align: center;
   }
 }
+
+/* Add Kruskal's algorithm specific styles */
+.kruskal-status-container {
+  width: 100%;
+  background: var(--surface);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+}
+
+.kruskal-status {
+  display: grid;
+  gap: 1rem;
+}
+
+.components-section {
+  padding: 1rem;
+  background: var(--background);
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Animation styles for Kruskal's algorithm */
+.kruskal-status .mst-edges-visualization {
+  transition: all 0.3s ease;
+}
+
+.kruskal-status .mst-edges-visualization .edge-item {
+  transition: transform 0.3s ease;
+}
+
+.kruskal-status .mst-edges-visualization .edge-item:hover {
+  transform: translateY(-2px);
+}
+
+/* Responsive styles for Kruskal's algorithm */
+@media (max-width: 768px) {
+  .kruskal-status {
+    grid-template-columns: 1fr;
+  }
+  
+  .kruskal-status .mst-edges-visualization {
+    flex-direction: column;
+  }
+  
+  .kruskal-status .mst-edges-visualization .edge-item {
+    width: 100%;
+    text-align: center;
+  }
+}
