@@ -1535,25 +1535,24 @@ export default function GraphEditor() {
         return prev;
       }
 
-      // Check if we've included all nodes or if we can't proceed
-      if (prev.processedNodes.size === nodes.length) {
+      // If priority queue is empty but we haven't processed all nodes, graph is disconnected
+      if (prev.priorityQueue.length === 0) {
+        if (prev.processedNodes.size < nodes.length) {
+          return {
+            ...prev,
+            isRunning: false,
+            error: "Graph is disconnected. Cannot construct complete MST."
+          };
+        }
+        // If we've processed all nodes, we're done
         return { ...prev, isRunning: false };
       }
 
-      // If priority queue is empty but we haven't processed all nodes, graph is disconnected
-      if (prev.priorityQueue.length === 0) {
-        return {
-          ...prev,
-          isRunning: false,
-          error: "Graph is disconnected. Cannot construct complete MST."
-        };
-      }
-
       // Sort priority queue by weight
-      prev.priorityQueue.sort((a, b) => a[1] - b[1]);
+      const sortedQueue = [...prev.priorityQueue].sort((a, b) => a[1] - b[1]);
       
       // Get edge with minimum weight
-      const [currentEdgeId, weight] = prev.priorityQueue.shift();
+      const [currentEdgeId, weight] = sortedQueue[0];
       const currentEdge = edges.find(e => e.id === currentEdgeId);
       
       if (!currentEdge) return prev;
@@ -1564,7 +1563,11 @@ export default function GraphEditor() {
       
       // Skip if both nodes are already in MST
       if (sourceInMST && targetInMST) {
-        return prev; // Don't increment iteration count for skipped edges
+        // Remove this edge from priority queue and continue
+        return {
+          ...prev,
+          priorityQueue: sortedQueue.slice(1)
+        };
       }
 
       // Get the new node to add to MST
@@ -1581,7 +1584,7 @@ export default function GraphEditor() {
       // Get new edges to add to priority queue
       const newNodeId = nodes.find(n => n.uniqueId === newNode)?.id;
       const adjList = getAdjacencyList();
-      const newPriorityQueue = [...prev.priorityQueue];
+      const newPriorityQueue = sortedQueue.slice(1); // Remove the current edge
 
       if (adjList[newNodeId]) {
         adjList[newNodeId].forEach(({ node: neighborId, weight: edgeWeight }) => {
@@ -1594,10 +1597,23 @@ export default function GraphEditor() {
           );
           
           if (edge) {
-            newPriorityQueue.push([edge.id, edgeWeight]);
+            // Only add edge if it's not already in the priority queue
+            if (!newPriorityQueue.some(([id]) => id === edge.id)) {
+              newPriorityQueue.push([edge.id, edgeWeight]);
+            }
           }
         });
       }
+
+      // Debug logging
+      console.log('Current state:', {
+        processedNodesSize: newProcessedNodes.size,
+        totalNodes: nodes.length,
+        queueSize: newPriorityQueue.length,
+        currentEdge: currentEdgeId,
+        newNode,
+        mstEdgesSize: newMSTEdges.size
+      });
 
       return {
         ...prev,
@@ -1617,8 +1633,12 @@ export default function GraphEditor() {
 
     // Continue if still running
     setPrimAnimationState(prev => {
-      if (!prev.isPaused && prev.isRunning) {
+      // Continue if we haven't processed all nodes yet
+      if (!prev.isPaused && prev.isRunning && prev.processedNodes.size < nodes.length) {
         runPrimStep();
+      } else if (prev.processedNodes.size === nodes.length) {
+        // If we've processed all nodes, we're done
+        return { ...prev, isRunning: false };
       }
       return prev;
     });
