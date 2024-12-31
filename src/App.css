@@ -236,6 +236,7 @@ body {
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-family: monospace;
+  transition: all 0.2s ease;
 }
 
 .matrix-list table {
@@ -756,4 +757,26 @@ body {
 
 .edge text {
   pointer-events: none;  /* Prevent text from interfering with edge clicks */
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.section-header:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.25rem;
+}
+
+.arrow {
+  transition: transform 0.2s ease;
+}
+
+.arrow.expanded {
+  transform: rotate(180deg);
 }

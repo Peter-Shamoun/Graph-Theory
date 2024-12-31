@@ -81,6 +81,10 @@ export default function GraphEditor() {
   // Add a ref for unique edge IDs
   const nextEdgeId = useRef(0);
 
+  // Add state for collapse/expand
+  const [isMatrixExpanded, setIsMatrixExpanded] = useState(false);
+  const [isListExpanded, setIsListExpanded] = useState(false);
+
   // Add useEffect for setting up drag behavior
   useEffect(() => {
     const dragHandler = drag()
@@ -1451,13 +1455,19 @@ export default function GraphEditor() {
 
           <div className="matrix-list-container">
             <div className="matrix-list">
-              <h2>Adjacency Matrix</h2>
-              {renderAdjacencyMatrix()}
+              <div className="section-header" onClick={() => setIsMatrixExpanded(!isMatrixExpanded)}>
+                <h2>Adjacency Matrix</h2>
+                <span className={`arrow ${isMatrixExpanded ? 'expanded' : ''}`}>▼</span>
+              </div>
+              {isMatrixExpanded && renderAdjacencyMatrix()}
             </div>
 
             <div className="adjacency-list">
-              <h2>Adjacency List</h2>
-              <pre>{getFormattedAdjacencyList()}</pre>
+              <div className="section-header" onClick={() => setIsListExpanded(!isListExpanded)}>
+                <h2>Adjacency List</h2>
+                <span className={`arrow ${isListExpanded ? 'expanded' : ''}`}>▼</span>
+              </div>
+              {isListExpanded && <pre>{getFormattedAdjacencyList()}</pre>}
             </div>
           </div>
 
