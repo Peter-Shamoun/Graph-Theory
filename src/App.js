@@ -115,7 +115,7 @@ export default function GraphEditor() {
   const [kruskalAnimationState, setKruskalAnimationState] = useState({
     isRunning: false,
     isPaused: false,
-    isComplete: false, // Add this flag
+    isComplete: false, //  this flag
     visitedNodes: new Set(),
     visitedEdges: new Set(),
     currentEdge: null,
@@ -387,7 +387,7 @@ export default function GraphEditor() {
     return [(x1 + x2) / 2, (y1 + y2) / 2];
   };
 
-  // Add this new helper function
+  //  helper function to get the edge path
   const getEdgePath = (sourceX, sourceY, targetX, targetY, offset = 0) => {
     if (offset === 0) {
       return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
@@ -447,7 +447,7 @@ export default function GraphEditor() {
     resetBellmanFord();
     resetDijkstra();
     resetPrim();
-    resetKruskal(); // Add this line
+    resetKruskal();
   };
 
   // Add function to handle directed/undirected toggle
@@ -490,7 +490,7 @@ export default function GraphEditor() {
     }
   };
 
-  // Add these helper functions to GraphEditor component
+  //  helper functions to GraphEditor component
   const getAdjacencyList = () => {
     // Create a mapping of uniqueId to simple numeric id
     const idMapping = {};
@@ -533,7 +533,7 @@ export default function GraphEditor() {
     setEdgeStart(null);
   };
 
-  // Add this function to format the adjacency list for display
+  //  function to format the adjacency list for display
   const getFormattedAdjacencyList = () => {
     const adjList = getAdjacencyList();
     let formatted = '';
@@ -553,7 +553,7 @@ export default function GraphEditor() {
     return formatted || 'Empty graph';
   };
 
-  // Add this function to generate the adjacency matrix
+  //  function to generate the adjacency matrix
   const getAdjacencyMatrix = () => {
     // Create a mapping of uniqueId to simple numeric id
     const idMapping = {};
@@ -581,7 +581,7 @@ export default function GraphEditor() {
     return matrix;
   };
 
-  // Add this function to render the matrix
+  //  function to render the matrix
   const renderAdjacencyMatrix = () => {
     const matrix = getAdjacencyMatrix();
     
@@ -613,7 +613,7 @@ export default function GraphEditor() {
     );
   };
 
-  // Add these new functions to handle BFS
+  // new functions to handle BFS
   const startBFS = (sourceNodeId) => {
     if (bfsAnimationState.isRunning) return;
     
@@ -955,7 +955,7 @@ export default function GraphEditor() {
     return "lightblue";
   };
 
-  // Add this helper function inside the GraphEditor component
+  //  helper function inside the GraphEditor component
   const getCurrentStateText = () => {
     if (bellmanFordAnimationState.isRunning) return 'Running Bellman-Ford';
     if (bfsAnimationState.isRunning) return 'Running BFS';
@@ -984,7 +984,7 @@ export default function GraphEditor() {
     }
   };
 
-  // Add these new functions for Timed DFS
+  // new functions for Timed DFS
   const startTimedDFS = (sourceNodeId) => {
     if (timedDfsAnimationState.isRunning) return;
     
@@ -1238,7 +1238,7 @@ export default function GraphEditor() {
             currentEdge: null,
             iterationCount: Math.floor(prev.currentStep / edges.length),
             // Keep predecessors and distances in final state for path highlighting
-            showShortestPaths: true // Add this flag
+            showShortestPaths: true //  flag
           };
         }
         prev.anyChanges = false;
@@ -1811,7 +1811,7 @@ export default function GraphEditor() {
       ...prev,
       isRunning: true,
       isPaused: false,
-      isComplete: false, // Add this flag
+      isComplete: false, //  flag
       visitedNodes: new Set(),
       visitedEdges: new Set(),
       currentEdge: null,
