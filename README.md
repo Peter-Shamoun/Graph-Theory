@@ -60,8 +60,6 @@ Built using:
 ## Implementation Notes
 
 - Uses D3.js for graph visualization and drag functionality
-- Implements a custom DisjointSet data structure for Kruskal's algorithm
-- Features  matrix and adjacency list representations
 
 
 ## Development
