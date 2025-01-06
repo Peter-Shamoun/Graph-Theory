@@ -57,9 +57,28 @@ Built using:
 - D3.js 7.9.0
 - CSS
 
-## Implementation Notes
+## Limitation Notes
 
-- Uses D3.js for graph visualization and drag functionality
+### Bellman-Ford Algorithm:
+- Can only run on directed graphs
+
+### Dijkstra's Algorithm:
+- Can only run on directed graphs
+- Cannot handle negative edge weights
+
+### Topological Sort:
+- Only works on directed graphs
+- Graph must be a DAG (Directed Acyclic Graph)
+
+### Prim's Algorithm:
+- Only works on weighted graphs
+
+### Kruskal's Algorithm:
+- Only works on weighted graphs
+
+### Graph Direction Type:
+- Cannot switch between directed and undirected mode once nodes are present in the graph
+- Must start with an empty graph to change direction type
 
 
 ## Development
