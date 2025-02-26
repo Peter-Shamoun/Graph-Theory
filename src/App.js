@@ -666,20 +666,29 @@ export default function GraphEditor() {
       
       // Get unvisited neighbors
       const neighbors = adjList[currentNodeId]
-        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
-        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+        .map(({node}) => {
+          const nodeObj = nodes.find(n => n.id === node);
+          return nodeObj ? { uniqueId: nodeObj.uniqueId, visibleId: nodeObj.id } : null;
+        })
+        .filter(node => node && !prev.visitedNodes.has(node.uniqueId));
+      
+      // Sort neighbors by their visible node values (node.id)
+      neighbors.sort((a, b) => a.visibleId - b.visibleId);
+      
+      // Extract just the uniqueIds after sorting
+      const sortedNeighborIds = neighbors.map(node => node.uniqueId);
 
       // Update predecessors and distances for newly discovered nodes
       const newPredecessors = { ...prev.predecessors };
       const newDistances = { ...prev.distances };
-      neighbors.forEach(neighborId => {
+      sortedNeighborIds.forEach(neighborId => {
         newPredecessors[neighborId] = currentNode;
         newDistances[neighborId] = prev.distances[currentNode] + 1;
       });
 
       // Add edges to visited edges
       const newVisitedEdges = new Set(prev.visitedEdges);
-      neighbors.forEach(neighborId => {
+      sortedNeighborIds.forEach(neighborId => {
         const edge = edges.find(e => 
           (e.source === currentNode && e.target === neighborId) ||
           (!isDirected && e.target === currentNode && e.source === neighborId)
@@ -689,8 +698,8 @@ export default function GraphEditor() {
 
       return {
         ...prev,
-        queue: [...newQueue, ...neighbors],
-        visitedNodes: new Set([...prev.visitedNodes, ...neighbors]),
+        queue: [...newQueue, ...sortedNeighborIds],
+        visitedNodes: new Set([...prev.visitedNodes, ...sortedNeighborIds]),
         visitedEdges: newVisitedEdges,
         currentNode: currentNode,
         predecessors: newPredecessors,
@@ -779,12 +788,18 @@ export default function GraphEditor() {
       
       // Get unvisited neighbors
       const neighbors = adjList[currentNodeId]
-        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
-        .filter(nodeId => nodeId && !prev.visitedNodes.has(nodeId));
+        .map(({node}) => {
+          const nodeObj = nodes.find(n => n.id === node);
+          return nodeObj ? { uniqueId: nodeObj.uniqueId, visibleId: nodeObj.id } : null;
+        })
+        .filter(node => node && !prev.visitedNodes.has(node.uniqueId));
+      
+      // Sort neighbors by their visible node values (node.id)
+      neighbors.sort((a, b) => a.visibleId - b.visibleId);
 
       if (neighbors.length > 0) {
-        // If there are unvisited neighbors, visit the first one
-        const nextNode = neighbors[0];
+        // If there are unvisited neighbors, visit the first one (with lowest visible ID)
+        const nextNode = neighbors[0].uniqueId;
         
         // Update predecessors and distances
         const newPredecessors = { ...prev.predecessors };
@@ -1029,7 +1044,16 @@ export default function GraphEditor() {
 
       // If stack is empty but there are unvisited nodes, start new DFS from an unvisited node
       if (prev.stack.length === 0 && prev.remainingNodes.size > 0) {
-        const nextStartNode = Array.from(prev.remainingNodes)[0];
+        // Get all remaining nodes with their visible IDs
+        const remainingNodesWithIds = Array.from(prev.remainingNodes).map(uniqueId => {
+          const node = nodes.find(n => n.uniqueId === uniqueId);
+          return { uniqueId, visibleId: node ? node.id : Infinity };
+        });
+        
+        // Sort by visible node ID and take the one with lowest ID
+        remainingNodesWithIds.sort((a, b) => a.visibleId - b.visibleId);
+        const nextStartNode = remainingNodesWithIds[0].uniqueId;
+        
         const newTime = prev.time + 1;
         
         return {
@@ -1053,26 +1077,32 @@ export default function GraphEditor() {
       
       // Get all neighbors (not just unvisited ones)
       const allNeighbors = adjList[currentNodeId]
-        .map(({node}) => nodes.find(n => n.id === node)?.uniqueId)
-        .filter(nodeId => nodeId);
+        .map(({node}) => {
+          const nodeObj = nodes.find(n => n.id === node);
+          return nodeObj ? { uniqueId: nodeObj.uniqueId, visibleId: nodeObj.id } : null;
+        })
+        .filter(node => node);
 
       // Check for back edges
       let foundBackEdge = prev.hasBackEdge;
       if (isDirected) {
-        allNeighbors.forEach(neighborId => {
-          if (prev.visitedNodes.has(neighborId) && 
-              prev.stack.includes(neighborId) && 
-              !prev.finishTimes[neighborId]) {
+        allNeighbors.forEach(neighbor => {
+          if (prev.visitedNodes.has(neighbor.uniqueId) && 
+              prev.stack.includes(neighbor.uniqueId) && 
+              !prev.finishTimes[neighbor.uniqueId]) {
             foundBackEdge = true;
           }
         });
       }
 
       // Get unvisited neighbors
-      const neighbors = allNeighbors.filter(nodeId => !prev.visitedNodes.has(nodeId));
+      const neighbors = allNeighbors.filter(node => !prev.visitedNodes.has(node.uniqueId));
+      
+      // Sort neighbors by their visible node values (node.id)
+      neighbors.sort((a, b) => a.visibleId - b.visibleId);
 
       if (neighbors.length > 0) {
-        const nextNode = neighbors[0];
+        const nextNode = neighbors[0].uniqueId;
         const newTime = prev.time + 1;
         
         return {
@@ -1187,8 +1217,23 @@ export default function GraphEditor() {
     const edgeSequence = [];
     const maxIterations = nodes.length - 1;
     
+    // Sort edges by source and target node visible IDs
+    const sortedEdges = [...edges].sort((a, b) => {
+      const aSource = nodes.find(n => n.uniqueId === a.source)?.id || 0;
+      const aTarget = nodes.find(n => n.uniqueId === a.target)?.id || 0;
+      const bSource = nodes.find(n => n.uniqueId === b.source)?.id || 0;
+      const bTarget = nodes.find(n => n.uniqueId === b.target)?.id || 0;
+      
+      // First compare by source node ID
+      if (aSource !== bSource) {
+        return aSource - bSource;
+      }
+      // If source is the same, compare by target node ID
+      return aTarget - bTarget;
+    });
+    
     for (let i = 0; i < maxIterations; i++) {
-      edges.forEach(edge => {
+      sortedEdges.forEach(edge => {
         edgeSequence.push({
           ...edge,
           iteration: i + 1
@@ -1391,8 +1436,22 @@ export default function GraphEditor() {
         return prev;
       }
 
-      // Get node with minimum distance from priority queue
-      prev.priorityQueue.sort((a, b) => a[1] - b[1]);
+      // Sort priority queue by distance, then by node ID for equal distances
+      prev.priorityQueue.sort((a, b) => {
+        const [aNodeId, aDistance] = a;
+        const [bNodeId, bDistance] = b;
+        
+        // First sort by distance
+        if (aDistance !== bDistance) {
+          return aDistance - bDistance;
+        }
+        
+        // If distances are equal, sort by visible node ID
+        const aVisibleId = nodes.find(n => n.uniqueId === aNodeId)?.id || 0;
+        const bVisibleId = nodes.find(n => n.uniqueId === bNodeId)?.id || 0;
+        return aVisibleId - bVisibleId;
+      });
+      
       const [currentNode, currentDistance] = prev.priorityQueue.shift();
       
       // Skip if node already processed
@@ -1419,7 +1478,14 @@ export default function GraphEditor() {
       const newVisitedEdges = new Set(prev.visitedEdges);
       const newRelaxedEdges = new Set(prev.relaxedEdges);
 
-      neighbors.forEach(({ node: neighborId, weight }) => {
+      // Sort neighbors by their visible node values (node.id)
+      const sortedNeighbors = [...neighbors].sort((a, b) => {
+        const aNodeId = a.node;
+        const bNodeId = b.node;
+        return aNodeId - bNodeId;
+      });
+
+      sortedNeighbors.forEach(({ node: neighborId, weight }) => {
         const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
         if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
 
@@ -1659,8 +1725,34 @@ export default function GraphEditor() {
         return { ...prev, isRunning: false };
       }
 
-      // Sort priority queue by weight
-      const sortedQueue = [...prev.priorityQueue].sort((a, b) => a[1] - b[1]);
+      // Sort priority queue by weight first, then by node IDs for edges with equal weights
+      const sortedQueue = [...prev.priorityQueue].sort((a, b) => {
+        const [aEdgeId, aWeight] = a;
+        const [bEdgeId, bWeight] = b;
+        
+        // First sort by weight
+        if (aWeight !== bWeight) {
+          return aWeight - bWeight;
+        }
+        
+        // If weights are equal, sort by source and target node IDs
+        const aEdge = edges.find(e => e.id === aEdgeId);
+        const bEdge = edges.find(e => e.id === bEdgeId);
+        
+        if (!aEdge || !bEdge) return 0;
+        
+        const aSource = nodes.find(n => n.uniqueId === aEdge.source)?.id || 0;
+        const aTarget = nodes.find(n => n.uniqueId === aEdge.target)?.id || 0;
+        const bSource = nodes.find(n => n.uniqueId === bEdge.source)?.id || 0;
+        const bTarget = nodes.find(n => n.uniqueId === bEdge.target)?.id || 0;
+        
+        // First compare by source node ID
+        if (aSource !== bSource) {
+          return aSource - bSource;
+        }
+        // If source is the same, compare by target node ID
+        return aTarget - bTarget;
+      });
       
       // Get edge with minimum weight
       const [currentEdgeId, weight] = sortedQueue[0];
@@ -1698,7 +1790,10 @@ export default function GraphEditor() {
       const newPriorityQueue = sortedQueue.slice(1); // Remove the current edge
 
       if (adjList[newNodeId]) {
-        adjList[newNodeId].forEach(({ node: neighborId, weight: edgeWeight }) => {
+        // Sort neighbors by their visible node values (node.id)
+        const sortedNeighbors = [...adjList[newNodeId]].sort((a, b) => a.node - b.node);
+        
+        sortedNeighbors.forEach(({ node: neighborId, weight: edgeWeight }) => {
           const neighborUniqueId = nodes.find(n => n.id === neighborId)?.uniqueId;
           if (!neighborUniqueId || newProcessedNodes.has(neighborUniqueId)) return;
 
@@ -1801,8 +1896,30 @@ export default function GraphEditor() {
     const dsu = new DisjointSet();
     nodes.forEach(node => dsu.makeSet(node.uniqueId));
 
-    // Sort edges by weight
-    const sortedEdges = [...edges].sort((a, b) => a.weight - b.weight);
+    // Sort edges by weight first, then by node IDs for edges with equal weights
+    const sortedEdges = [...edges].sort((a, b) => {
+      // First sort by weight
+      if (a.weight !== b.weight) {
+        return a.weight - b.weight;
+      }
+      
+      // If weights are equal, sort by source and target node IDs
+      const aSource = nodes.find(n => n.uniqueId === a.source)?.id || 0;
+      const aTarget = nodes.find(n => n.uniqueId === a.target)?.id || 0;
+      const bSource = nodes.find(n => n.uniqueId === b.source)?.id || 0;
+      const bTarget = nodes.find(n => n.uniqueId === b.target)?.id || 0;
+      
+      // For undirected edges, use the smaller node ID as source and larger as target for consistent sorting
+      const [aMinId, aMaxId] = aSource <= aTarget ? [aSource, aTarget] : [aTarget, aSource];
+      const [bMinId, bMaxId] = bSource <= bTarget ? [bSource, bTarget] : [bTarget, bSource];
+      
+      // First compare by smaller node ID
+      if (aMinId !== bMinId) {
+        return aMinId - bMinId;
+      }
+      // If smaller node IDs are the same, compare by larger node ID
+      return aMaxId - bMaxId;
+    });
 
     // Get initial components
     const { nodeToComponent, numComponents } = dsu.getComponents();
